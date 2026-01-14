@@ -49,6 +49,7 @@ const config: Config = {
         body: ["var(--font-body)", "sans-serif"],
         sans: ["var(--font-body)", "sans-serif"],
         mono: [
+          "var(--font-mono)",
           "JetBrains Mono",
           "ui-monospace",
           "SFMono-Regular",

@@ -81,7 +81,7 @@ export default function DashboardLayout({
     const iconClass = (path: string) => `material-symbols-outlined text-[20px] ${isActive(path) ? '' : 'group-hover:text-primary-500 transition-colors'}`;
 
     return (
-        <div className="font-sans bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 h-screen flex overflow-hidden selection:bg-primary-100 selection:text-primary-700">
+        <div className="font-sans bg-slate-50 text-slate-900 h-screen flex overflow-hidden selection:bg-primary-100 selection:text-primary-700">
             {/* Sidebar */}
             <aside className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col flex-shrink-0 z-30 transition-all duration-300">
                 <div className="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-900">
@@ -146,9 +146,9 @@ export default function DashboardLayout({
             </aside>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-slate-50 dark:bg-slate-900">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-slate-50">
                 {/* Header */}
-                <header className="h-16 flex items-center justify-between px-8 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/50 backdrop-blur-sm z-20">
+                <header className="h-16 flex items-center justify-between px-8 border-b border-slate-200 bg-white z-20">
                     <div className="flex items-center gap-4">
                         <button className="md:hidden text-slate-500 dark:text-slate-300">
                             <span className="material-symbols-outlined">menu</span>
@@ -158,7 +158,7 @@ export default function DashboardLayout({
                                 Admin
                             </span>
                             <span className="mx-2 text-slate-300">/</span>
-                            <span className="text-slate-800 dark:text-white">Dashboard</span>
+                            <span className="text-slate-800">Dashboard</span>
                         </nav>
                     </div>
                     <div className="flex items-center gap-4">
@@ -169,53 +169,53 @@ export default function DashboardLayout({
                                 </span>
                             </span>
                             <input
-                                className="block w-64 pl-9 pr-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-md leading-5 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-all shadow-sm"
+                                className="block w-64 pl-9 pr-3 py-1.5 border border-slate-300 rounded-md leading-5 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-all shadow-sm"
                                 placeholder="Search machine ID..."
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
-                        <button className="relative p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 transition-colors">
-                            <span className="material-symbols-outlined text-[22px]">notifications</span>
-                            <span className="absolute top-2 right-2 size-2 bg-danger rounded-full ring-2 ring-white dark:ring-slate-800"></span>
+                        <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
+                        <button className="relative p-2 rounded-lg hover:bg-slate-100 text-slate-800 hover:text-slate-900 transition-colors">
+                            <span className="material-symbols-outlined text-[24px] font-medium">notifications</span>
+                            <span className="absolute top-1.5 right-1.5 size-2.5 bg-red-500 rounded-full ring-2 ring-white shadow-sm"></span>
                         </button>
                         {/* User Profile */}
-                        <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                             <div className="relative">
-                                <div className="size-9 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold text-sm ring-2 ring-slate-200 dark:ring-slate-700">
+                                <div className="size-10 rounded-full bg-gradient-to-br from-primary-600 to-primary-700 flex items-center justify-center text-white font-bold text-base shadow-md ring-2 ring-primary-100">
                                     {loading ? (
-                                        <span className="material-symbols-outlined text-[18px] animate-spin">sync</span>
+                                        <span className="material-symbols-outlined text-[20px] animate-spin font-medium">sync</span>
                                     ) : user ? (
                                         user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()
                                     ) : (
                                         'U'
                                     )}
                                 </div>
-                                <div className="absolute bottom-0 right-0 size-2.5 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
+                                <div className="absolute bottom-0 right-0 size-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
                             </div>
                             <div className="flex flex-col hidden lg:block">
-                                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                                <p className="text-sm font-semibold text-slate-900">
                                     {loading ? 'Loading...' : user?.name || user?.username || 'User'}
                                 </p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">
+                                <p className="text-xs text-slate-600 capitalize font-medium mt-0.5">
                                     {loading ? '' : user?.role || 'Admin'}
                                 </p>
                             </div>
                             <button
                                 onClick={handleLogout}
-                                className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 transition-colors"
+                                className="p-2 rounded-lg hover:bg-red-50 text-slate-800 hover:text-red-600 transition-all border border-transparent hover:border-red-200"
                                 title="Logout"
                             >
-                                <span className="material-symbols-outlined text-[20px]">logout</span>
+                                <span className="material-symbols-outlined text-[24px] font-medium">logout</span>
                             </button>
                         </div>
                     </div>
                 </header>
 
                 {/* Dashboard Content */}
-                <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
+                <main className="flex-1 overflow-y-auto bg-slate-50">
                     {children}
                 </main>
             </div>

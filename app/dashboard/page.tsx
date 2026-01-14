@@ -3,21 +3,19 @@
 export default function DashboardPage() {
   return (
     <div className="p-8">
-
-
       <div className="max-w-7xl mx-auto flex flex-col gap-8">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
               Total PCs Overview
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               Real-time status of computer lab infrastructure.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-md shadow-sm flex items-center gap-2">
+            <span className="text-xs text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-md shadow-sm flex items-center gap-2">
               <span className="size-2 rounded-full bg-green-500 animate-pulse"></span>
               System Online
             </span>
@@ -31,25 +29,25 @@ export default function DashboardPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Total Fleet */}
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-card p-5 relative overflow-hidden group">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-card p-5 relative overflow-hidden group">
             <div className="absolute right-0 top-0 h-full w-1 bg-primary-600"></div>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                   Total Fleet
                 </p>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                <h3 className="text-3xl font-bold text-slate-900 tracking-tight">
                   1,240
                 </h3>
               </div>
-              <div className="p-2 bg-primary-50 dark:bg-primary-900/30 rounded-md">
-                <span className="material-symbols-outlined text-primary-600 dark:text-primary-400">
+              <div className="p-2 bg-primary-50 rounded-md">
+                <span className="material-symbols-outlined text-primary-600">
                   computer
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+              <span className="text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded flex items-center gap-1">
                 <span className="material-symbols-outlined text-[14px]">trending_up</span>
                 1.2%
               </span>
@@ -58,70 +56,70 @@ export default function DashboardPage() {
           </div>
 
           {/* Online & Active */}
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-card p-5 relative overflow-hidden">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-card p-5 relative overflow-hidden">
             <div className="absolute right-0 top-0 h-full w-1 bg-green-500"></div>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                   Online & Active
                 </p>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                <h3 className="text-3xl font-bold text-slate-900 tracking-tight">
                   1,100
                 </h3>
               </div>
-              <div className="p-2 bg-green-50 dark:bg-green-900/30 rounded-md">
-                <span className="material-symbols-outlined text-green-600 dark:text-green-400">
+              <div className="p-2 bg-green-50 rounded-md">
+                <span className="material-symbols-outlined text-green-600">
                   wifi
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">
+              <span className="text-slate-500 font-medium">
                 88.7% Utilization rate
               </span>
             </div>
           </div>
 
           {/* Maintenance */}
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-card p-5 relative overflow-hidden">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-card p-5 relative overflow-hidden">
             <div className="absolute right-0 top-0 h-full w-1 bg-warning"></div>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                   Maintenance
                 </p>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                <h3 className="text-3xl font-bold text-slate-900 tracking-tight">
                   40
                 </h3>
               </div>
-              <div className="p-2 bg-orange-50 dark:bg-orange-900/30 rounded-md">
+              <div className="p-2 bg-orange-50 rounded-md">
                 <span className="material-symbols-outlined text-orange-500">build_circle</span>
               </div>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 mt-2">
+            <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2">
               <div className="bg-warning h-1.5 rounded-full" style={{ width: "15%" }}></div>
             </div>
             <p className="text-xs text-slate-400 mt-2">2 critical repairs needed</p>
           </div>
 
           {/* Warranty Expiring */}
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-card p-5 relative overflow-hidden">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-card p-5 relative overflow-hidden">
             <div className="absolute right-0 top-0 h-full w-1 bg-danger"></div>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                   Warranty Expiring
                 </p>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                <h3 className="text-3xl font-bold text-slate-900 tracking-tight">
                   15
                 </h3>
               </div>
-              <div className="p-2 bg-red-50 dark:bg-red-900/30 rounded-md">
+              <div className="p-2 bg-red-50 rounded-md">
                 <span className="material-symbols-outlined text-danger">verified_user</span>
               </div>
             </div>
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-danger font-medium bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">
+              <span className="text-danger font-medium bg-red-50 px-1.5 py-0.5 rounded">
                 Action required
               </span>
               <span className="text-slate-400">within 30 days</span>
@@ -132,17 +130,17 @@ export default function DashboardPage() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Distribution by Location */}
-          <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-card flex flex-col">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
+          <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 shadow-card flex flex-col">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base font-bold text-slate-900">
                   Distribution by Location
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   Asset allocation across campus facilities
                 </p>
               </div>
-              <button className="text-primary-600 hover:text-primary-700 text-xs font-medium border border-primary-100 dark:border-primary-900/30 bg-primary-50 dark:bg-primary-900/10 px-3 py-1.5 rounded-md transition-colors">
+              <button className="text-primary-600 hover:text-primary-700 text-xs font-medium border border-primary-100 bg-primary-50 px-3 py-1.5 rounded-md transition-colors">
                 Full Report
               </button>
             </div>
@@ -170,13 +168,13 @@ export default function DashboardPage() {
                   },
                 ].map((location, idx) => (
                   <div key={idx} className="group">
-                    <div className="flex justify-between text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-                      <span className="text-slate-700 dark:text-slate-200">
+                    <div className="flex justify-between text-xs font-medium text-slate-500 mb-1">
+                      <span className="text-slate-700">
                         {location.name}
                       </span>
                       <span>{location.units} Units</span>
                     </div>
-                    <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-sm h-3 overflow-hidden">
+                    <div className="w-full bg-slate-100 rounded-sm h-3 overflow-hidden">
                       <div
                         className={`${location.color} h-full rounded-sm transition-all duration-500 group-hover:opacity-80`}
                         style={{ width: `${location.width}%` }}
@@ -189,12 +187,12 @@ export default function DashboardPage() {
           </div>
 
           {/* OS Breakdown */}
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-card flex flex-col">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-700/50">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-card flex flex-col">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">
                 OS Breakdown
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Operating System versions
               </p>
             </div>
@@ -207,8 +205,8 @@ export default function DashboardPage() {
                       "conic-gradient(#3b82f6 0% 80%, #a855f7 80% 95%, #f97316 95% 100%)",
                   }}
                 ></div>
-                <div className="absolute inset-4 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center flex-col">
-                  <span className="text-3xl font-bold text-slate-900 dark:text-white">80%</span>
+                <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center flex-col">
+                  <span className="text-3xl font-bold text-slate-900">80%</span>
                   <span className="text-[10px] uppercase text-slate-400 font-semibold">
                     Win 11
                   </span>
@@ -223,9 +221,9 @@ export default function DashboardPage() {
                   <div key={idx} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <span className={`size-3 rounded-full ${os.color}`}></span>
-                      <span className="text-slate-700 dark:text-slate-300">{os.name}</span>
+                      <span className="text-slate-700">{os.name}</span>
                     </div>
-                    <span className="font-medium text-slate-900 dark:text-white">
+                    <span className="font-medium text-slate-900">
                       {os.count}
                     </span>
                   </div>
@@ -238,33 +236,33 @@ export default function DashboardPage() {
         {/* Alerts and Growth */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Recent System Alerts */}
-          <div className="xl:col-span-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-card flex flex-col">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <div className="xl:col-span-2 bg-white rounded-lg border border-slate-200 shadow-card flex flex-col">
+            <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <span className="material-symbols-outlined text-slate-400">
                   notifications_active
                 </span>
                 Recent System Alerts
               </h3>
-              <button className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white text-xs font-medium">
+              <button className="text-slate-500 hover:text-slate-700 text-xs font-medium">
                 Clear All
               </button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                    <th className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50">Severity</th>
-                    <th className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50">Alert Message</th>
-                    <th className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50">Location</th>
-                    <th className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 text-right">Time</th>
+                  <tr className="text-xs font-semibold text-slate-500 border-b border-slate-200">
+                    <th className="px-6 py-3 bg-slate-50">Severity</th>
+                    <th className="px-6 py-3 bg-slate-50">Alert Message</th>
+                    <th className="px-6 py-3 bg-slate-50">Location</th>
+                    <th className="px-6 py-3 bg-slate-50 text-right">Time</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm divide-y divide-slate-100 dark:divide-slate-700/50">
+                <tbody className="text-sm divide-y divide-slate-100">
                   {[
                     {
                       severity: "Critical",
-                      severityClass: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+                      severityClass: "bg-red-100 text-red-800",
                       message: "Low Memory Warning",
                       subMessage: "PC-LAB-04 running at 95% RAM",
                       location: "Lab B (Arts)",
@@ -273,7 +271,7 @@ export default function DashboardPage() {
                     {
                       severity: "Warning",
                       severityClass:
-                        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+                        "bg-amber-100 text-amber-800",
                       message: "OS Update Pending",
                       subMessage: "15 machines waiting for KB5034441",
                       location: "Main Library",
@@ -282,7 +280,7 @@ export default function DashboardPage() {
                     {
                       severity: "Info",
                       severityClass:
-                        "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+                        "bg-blue-100 text-blue-800",
                       message: "New Hardware Registered",
                       subMessage: "Dell Optiplex 7090 (x5) added",
                       location: "Staff Room",
@@ -291,7 +289,7 @@ export default function DashboardPage() {
                   ].map((alert, idx) => (
                     <tr
                       key={idx}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group"
+                      className="hover:bg-slate-50 transition-colors group"
                     >
                       <td className="px-6 py-3">
                         <span
@@ -301,12 +299,12 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-3">
-                        <div className="font-medium text-slate-900 dark:text-white">
+                        <div className="font-medium text-slate-900">
                           {alert.message}
                         </div>
                         <div className="text-xs text-slate-500">{alert.subMessage}</div>
                       </td>
-                      <td className="px-6 py-3 text-slate-600 dark:text-slate-400">
+                      <td className="px-6 py-3 text-slate-600">
                         {alert.location}
                       </td>
                       <td className="px-6 py-3 text-right text-slate-500 text-xs font-mono">
@@ -320,12 +318,12 @@ export default function DashboardPage() {
           </div>
 
           {/* Fleet Growth */}
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-card p-6 flex flex-col">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-card p-6 flex flex-col">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              <h3 className="text-base font-bold text-slate-900">
                 Fleet Growth
               </h3>
-              <select className="bg-slate-50 dark:bg-slate-700 border-none text-xs rounded px-2 py-1 text-slate-600 dark:text-slate-300 focus:ring-0 cursor-pointer">
+              <select className="bg-slate-50 border-none text-xs rounded px-2 py-1 text-slate-600 focus:ring-0 cursor-pointer">
                 <option>2023</option>
                 <option>2022</option>
               </select>
@@ -337,7 +335,6 @@ export default function DashboardPage() {
                 viewBox="0 0 300 100"
               >
                 <line
-                  className="dark:stroke-slate-700"
                   stroke="#e2e8f0"
                   strokeWidth="1"
                   x1="0"
@@ -346,7 +343,6 @@ export default function DashboardPage() {
                   y2="100"
                 ></line>
                 <line
-                  className="dark:stroke-slate-700"
                   stroke="#e2e8f0"
                   strokeDasharray="4"
                   strokeWidth="1"
@@ -383,9 +379,9 @@ export default function DashboardPage() {
               <span>Jun</span>
               <span>Dec</span>
             </div>
-            <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-700/30 rounded border border-slate-100 dark:border-slate-700">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                <span className="font-semibold text-slate-900 dark:text-white">Note:</span> Budget
+            <div className="mt-4 p-3 bg-slate-50 rounded border border-slate-100">
+              <p className="text-xs text-slate-500">
+                <span className="font-semibold text-slate-900">Note:</span> Budget
                 approved for 50 new workstations in Q3.
               </p>
             </div>
@@ -400,7 +396,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-
   );
 }
-

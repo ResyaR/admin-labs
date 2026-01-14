@@ -121,6 +121,7 @@ async function createNewPC(spec: any) {
       motherboard: spec.motherboard ? {
         create: {
           model: spec.motherboard,
+          serialNumber: spec.motherboardSerial || null,
         },
       } : undefined,
       rams: spec.ramDetails && spec.ramDetails.length > 0 ? {
@@ -131,6 +132,8 @@ async function createNewPC(spec: any) {
           speed: ram.speed || null,
           type: ram.type || null,
           formFactor: ram.formFactor || null,
+          serialNumber: ram.serialNumber || null,
+          bankLabel: ram.bank || null,
           slotIndex: index,
         })),
       } : undefined,
@@ -141,6 +144,7 @@ async function createNewPC(spec: any) {
           size: storage.size || null,
           interface: storage.interface || null,
           type: storage.type || null,
+          serialNumber: storage.serialNumber || null,
           diskIndex: index,
         })),
       } : undefined,
@@ -266,6 +270,50 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
     }
   }
 
+  // Cek perubahan Motherboard
+  if (newSpec.motherboard) {
+    // Pastikan motherboardSerial ditangani
+    const newMoboSerial = newSpec.motherboardSerial || null;
+
+    if (existingPC.motherboard) {
+      if (existingPC.motherboard.model !== newSpec.motherboard) {
+        changes.push({
+          pcId: existingPC.id,
+          componentType: 'motherboard',
+          componentId: existingPC.motherboard.id,
+          changeType: 'modified',
+          oldValue: JSON.stringify(existingPC.motherboard),
+          newValue: JSON.stringify({ model: newSpec.motherboard, serialNumber: newMoboSerial }),
+          message: `Motherboard changed from "${existingPC.motherboard.model}" to "${newSpec.motherboard}"`,
+          severity: 'warning',
+        })
+      }
+      await prisma.motherboard.update({
+        where: { id: existingPC.motherboard.id },
+        data: {
+          model: newSpec.motherboard,
+          serialNumber: newMoboSerial
+        }
+      })
+    } else {
+      await prisma.motherboard.create({
+        data: {
+          pcId: existingPC.id,
+          model: newSpec.motherboard,
+          serialNumber: newMoboSerial
+        }
+      })
+      changes.push({
+        pcId: existingPC.id,
+        componentType: 'motherboard',
+        changeType: 'added',
+        newValue: JSON.stringify({ model: newSpec.motherboard, serialNumber: newMoboSerial }),
+        message: `Motherboard added: "${newSpec.motherboard}"`,
+        severity: 'info',
+      })
+    }
+  }
+
   // Cek perubahan RAM
   if (newSpec.ramDetails && newSpec.ramDetails.length > 0) {
     const existingRams = existingPC.rams || []
@@ -324,6 +372,8 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
             speed: newRam.speed || null,
             type: newRam.type || null,
             formFactor: newRam.formFactor || null,
+            serialNumber: newRam.serialNumber || null,
+            bankLabel: newRam.bank || null,
           },
         })
       } else {
@@ -337,6 +387,8 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
             speed: newRam.speed || null,
             type: newRam.type || null,
             formFactor: newRam.formFactor || null,
+            serialNumber: newRam.serialNumber || null,
+            bankLabel: newRam.bank || null,
             slotIndex: i,
           },
         })
@@ -409,6 +461,7 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
             size: newStorage.size || null,
             interface: newStorage.interface || null,
             type: newStorage.type || null,
+            serialNumber: newStorage.serialNumber || null,
           },
         })
       } else {
@@ -421,6 +474,7 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
             size: newStorage.size || null,
             interface: newStorage.interface || null,
             type: newStorage.type || null,
+            serialNumber: newStorage.serialNumber || null,
             diskIndex: i,
           },
         })
@@ -431,6 +485,44 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
           newValue: JSON.stringify(newStorage),
           message: `Storage added: ${newStorage.manufacturer || ''} ${newStorage.model || ''} ${newStorage.size || ''}`,
           severity: 'info',
+        })
+      }
+    }
+  }
+  // Check changes for network interfaces (simple update for now)
+  if (newSpec.interfaces && newSpec.interfaces.length > 0) {
+    // Just delete all old and recreate new for simplicity in this version, OR smarter update.
+    // Doing smarter update to save history/ID if possible, but network interfaces can be dynamic.
+    // For now, let's just update `isUp` and IPs if matched by name, or recreate if not executing.
+
+    // Since prisma doesn't support easy bulk upsert with different criteria, we usually do delete/create or manual finding.
+    // But preserving IDs is good. Let's do a simple loop.
+
+    const existingNets = existingPC.networks || [];
+    const newNets = newSpec.interfaces;
+
+    for (const net of newNets) {
+      const match = existingNets.find((n: any) => n.name === net.name);
+      if (match) {
+        await prisma.networkInterface.update({
+          where: { id: match.id },
+          data: {
+            macAddr: net.macAddr || null,
+            ipv4: net.ipv4 || null,
+            isUp: net.isUp !== undefined ? net.isUp : true,
+            bandwidth: net.bandwidth || null
+          }
+        })
+      } else {
+        await prisma.networkInterface.create({
+          data: {
+            pcId: existingPC.id,
+            name: net.name || 'Unknown',
+            macAddr: net.macAddr || null,
+            ipv4: net.ipv4 || null,
+            isUp: net.isUp !== undefined ? net.isUp : true,
+            bandwidth: net.bandwidth || null
+          }
         })
       }
     }
