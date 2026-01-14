@@ -1,0 +1,12 @@
+
+model AppCredential {
+  id            String   @id @default(cuid())
+  name          String
+  credentialKey String   @unique
+  isActive      Boolean  @default(true)
+  createdBy     String?  // Username of admin who created this
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("app_credentials")
+}

@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String    @id @default(cuid())
+  username  String    @unique
+  email     String?   @unique
+  password  String
+  name      String?
+  role      String    @default("admin") // admin, user, etc.
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  sessions  Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model PC {
+  id          String   @id @default(cuid())
+  hostname    String   @unique
+  brand       String?
+  os          String?
+  osVersion   String?
+  osBuild     String?
+  arch        String?
+  location    String?
+  status      String   @default("active") // active, maintenance, offline
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastSeen    DateTime @default(now())
+
+  // Relations
+  cpu         CPU?
+  gpu         GPU?
+  motherboard Motherboard?
+  rams        RAM[]
+  storages    Storage[]
+  networks    NetworkInterface[]
+  changes     ComponentChange[]
+
+  @@map("pcs")
+}
+
+model CPU {
+  id          String   @id @default(cuid())
+  pcId        String   @unique
+  model       String
+  cores       Int
+  clock       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pc          PC       @relation(fields: [pcId], references: [id], onDelete: Cascade)
+
+  @@map("cpus")
+}
+
+model GPU {
+  id          String   @id @default(cuid())
+  pcId        String   @unique
+  model       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pc          PC       @relation(fields: [pcId], references: [id], onDelete: Cascade)
+
+  @@map("gpus")
+}
+
+model Motherboard {
+  id          String   @id @default(cuid())
+  pcId        String   @unique
+  manufacturer String?
+  model       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pc          PC       @relation(fields: [pcId], references: [id], onDelete: Cascade)
+
+  @@map("motherboards")
+}
+
+model RAM {
+  id          String   @id @default(cuid())
+  pcId        String
+  manufacturer String?
+  model       String?
+  capacity    String?
+  speed       String?
+  type        String?
+  formFactor  String?
+  slotIndex   Int?     // Index slot RAM (0, 1, 2, etc.)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pc          PC       @relation(fields: [pcId], references: [id], onDelete: Cascade)
+
+  @@index([pcId])
+  @@map("rams")
+}
+
+model Storage {
+  id          String   @id @default(cuid())
+  pcId        String
+  manufacturer String?
+  model       String?
+  size        String?
+  interface   String?
+  type        String?
+  diskIndex   Int?     // Index disk (0, 1, 2, etc.)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pc          PC       @relation(fields: [pcId], references: [id], onDelete: Cascade)
+
+  @@index([pcId])
+  @@map("storages")
+}
+
+model NetworkInterface {
+  id          String   @id @default(cuid())
+  pcId        String
+  name        String
+  macAddr     String?
+  ipv4        String?
+  isUp        Boolean  @default(true)
+  bandwidth   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pc          PC       @relation(fields: [pcId], references: [id], onDelete: Cascade)
+
+  @@index([pcId])
+  @@map("network_interfaces")
+}
+
+model ComponentChange {
+  id          String   @id @default(cuid())
+  pcId        String
+  componentType String // cpu, gpu, ram, storage, motherboard, network
+  componentId String?  // ID dari komponen yang berubah
+  changeType  String   // added, removed, modified
+  oldValue    String?  // JSON string untuk nilai lama
+  newValue    String?  // JSON string untuk nilai baru
+  message     String   // Pesan perubahan
+  severity    String   @default("warning") // info, warning, critical
+  createdAt   DateTime @default(now())
+
+  pc          PC       @relation(fields: [pcId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@map("component_changes")
+}
+
+model AppCredential {
+  id            String   @id @default(cuid())
+  name          String
+  credentialKey String   @unique @default(cuid()) // Unique key for login
+  isActive      Boolean  @default(true)
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("app_credentials")
+}
