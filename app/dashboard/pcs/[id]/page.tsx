@@ -63,6 +63,7 @@ interface PCDetail {
         manufacturer: string | null;
         model: string | null;
         bios: string | null;
+        serialNumber: string | null;
     } | null;
     changes: Array<{
         id: string;
