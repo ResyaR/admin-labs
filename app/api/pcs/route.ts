@@ -55,17 +55,43 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/pcs - Mengambil daftar semua PC
+// GET /api/pcs - Mengambil daftar semua PC (optimized for list view)
 export async function GET() {
   try {
     const pcs = await prisma.pC.findMany({
-      include: {
-        cpu: true,
-        gpu: true,
-        motherboard: true,
-        rams: true,
-        storages: true,
-        networks: true,
+      select: {
+        id: true,
+        hostname: true,
+        brand: true,
+        os: true,
+        osVersion: true,
+        location: true,
+        status: true,
+        lastSeen: true,
+        createdAt: true,
+        updatedAt: true,
+        // Only load essential fields from related tables
+        cpu: {
+          select: {
+            model: true,
+            cores: true,
+            clock: true,
+          },
+        },
+        // For list view, we only need counts and basic info
+        rams: {
+          select: {
+            capacity: true,
+            type: true,
+          },
+        },
+        storages: {
+          select: {
+            size: true,
+            type: true,
+          },
+        },
+        // Count of critical changes
         _count: {
           select: {
             changes: {

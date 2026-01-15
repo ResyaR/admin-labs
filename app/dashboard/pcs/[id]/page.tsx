@@ -86,11 +86,42 @@ export default function PCDetailPage() {
     const [showRamModal, setShowRamModal] = useState(false);
     const [showStorageModal, setShowStorageModal] = useState(false);
 
+    // Edit Config State
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [labs, setLabs] = useState<any[]>([]);
+    const [editForm, setEditForm] = useState({
+        location: '',
+        status: ''
+    });
+
     useEffect(() => {
         if (pcId) {
             fetchPCDetail();
         }
     }, [pcId]);
+
+    // Fetch Labs when modal opens
+    useEffect(() => {
+        if (showEditModal) {
+            fetchLabs();
+            setEditForm({
+                location: pc?.location || '',
+                status: pc?.status || 'active'
+            });
+        }
+    }, [showEditModal]);
+
+    const fetchLabs = async () => {
+        try {
+            const res = await fetch('/api/labs');
+            const data = await res.json();
+            if (data.success) {
+                setLabs(data.data);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     const fetchPCDetail = async () => {
         try {
@@ -109,6 +140,27 @@ export default function PCDetailPage() {
             setError(err.message || 'An error occurred');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleUpdateConfig = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const res = await fetch(`/api/pcs/${pcId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editForm)
+            });
+            const data = await res.json();
+            if (data.success) {
+                setPc({ ...pc!, location: editForm.location, status: editForm.status });
+                setShowEditModal(false);
+            } else {
+                alert('Failed to update: ' + (data.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Error updating configuration');
+            console.error(e);
         }
     };
 
@@ -199,7 +251,10 @@ export default function PCDetailPage() {
                         <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-sm hover:border-slate-300">
                             <span className="material-symbols-outlined text-lg">print</span> Print QR
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:translate-y-0.5">
+                        <button
+                            onClick={() => setShowEditModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:translate-y-0.5"
+                        >
                             <span className="material-symbols-outlined text-lg">edit</span> Edit Config
                         </button>
                     </div>
@@ -456,6 +511,53 @@ export default function PCDetailPage() {
                                 System Info
                             </h3>
                             <div className="space-y-4">
+                                {/* Hostname */}
+                                <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-blue-200 transition-colors">
+                                    <div className="size-10 bg-white shadow-sm border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 group-hover:text-blue-600 transition-colors">
+                                        <span className="material-symbols-outlined">computer</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-slate-900">Hostname</p>
+                                        <p className="text-xs font-mono text-slate-700 uppercase tracking-tight truncate">{pc.hostname}</p>
+                                    </div>
+                                </div>
+
+                                {/* Architecture */}
+                                <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-blue-200 transition-colors">
+                                    <div className="size-10 bg-white shadow-sm border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 group-hover:text-blue-600 transition-colors">
+                                        <span className="material-symbols-outlined">memory</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-slate-900">Architecture</p>
+                                        <p className="text-xs font-mono text-slate-700 tracking-tight">{pc.cpu?.architecture || 'amd64'}</p>
+                                    </div>
+                                </div>
+
+                                {/* Keyboard */}
+                                <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-blue-200 transition-colors">
+                                    <div className="size-10 bg-white shadow-sm border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 group-hover:text-blue-600 transition-colors">
+                                        <span className="material-symbols-outlined">keyboard</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-slate-900">Keyboard</p>
+                                        <p className="text-xs text-slate-700 tracking-tight">Enhanced (101- or 102-key)</p>
+                                    </div>
+                                </div>
+
+                                {/* Mouse */}
+                                <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-blue-200 transition-colors">
+                                    <div className="size-10 bg-white shadow-sm border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 group-hover:text-blue-600 transition-colors">
+                                        <span className="material-symbols-outlined">mouse</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-slate-900">Mouse</p>
+                                        <p className="text-xs text-slate-700 tracking-tight">Microsoft HID-compliant mouse</p>
+                                    </div>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="border-t border-slate-200 my-4"></div>
+
                                 <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-blue-200 transition-colors">
                                     <div className="size-10 bg-white shadow-sm border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 group-hover:text-blue-600 transition-colors">
                                         <span className="material-symbols-outlined">schedule</span>
@@ -529,6 +631,67 @@ export default function PCDetailPage() {
                 </footer>
 
             </div>
+
+            {/* Edit Config Modal */}
+            {showEditModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                        <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                            <h3 className="font-bold text-lg text-slate-900">Edit Configuration</h3>
+                            <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <form onSubmit={handleUpdateConfig} className="p-6 flex flex-col gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    Location / Lab
+                                </label>
+                                <select
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={editForm.location}
+                                    onChange={e => setEditForm({ ...editForm, location: e.target.value })}
+                                >
+                                    <option value="">-- Unassigned --</option>
+                                    {labs.map(lab => (
+                                        <option key={lab.id} value={lab.name}>{lab.name}</option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-slate-500 mt-1">Select the physical lab/location for this device.</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    Status
+                                </label>
+                                <select
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={editForm.status}
+                                    onChange={e => setEditForm({ ...editForm, status: e.target.value })}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="maintenance">Maintenance</option>
+                                    <option value="offline">Offline</option>
+                                </select>
+                            </div>
+                            <div className="flex justify-end gap-3 mt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditModal(false)}
+                                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* RAM Details Modal - STRUCTURED LIKE APP */}
             {showRamModal && (

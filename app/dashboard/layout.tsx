@@ -116,27 +116,24 @@ export default function DashboardLayout({
                             <span className={iconClass('/dashboard/pcs')}>computer</span>
                             <span className="text-sm font-medium">All PCs</span>
                         </Link>
-                        <Link href="/dashboard/network" className={linkClass('/dashboard/network')}>
-                            <span className={iconClass('/dashboard/network')}>lan</span>
-                            <span className="text-sm font-medium">Network Map</span>
-                        </Link>
+
                     </nav>
                     <nav className="flex flex-col gap-1">
                         <div className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                             Management
                         </div>
-                        <Link href="/dashboard/hardware" className={linkClass('/dashboard/hardware')}>
-                            <span className={iconClass('/dashboard/hardware')}>inventory</span>
-                            <span className="text-sm font-medium">Hardware</span>
-                        </Link>
-                        <Link href="/dashboard/software" className={linkClass('/dashboard/software')}>
-                            <span className={iconClass('/dashboard/software')}>security_update</span>
-                            <span className="text-sm font-medium">Software & Updates</span>
-                        </Link>
-                        <Link href="/dashboard/users" className={linkClass('/dashboard/users')}>
-                            <span className={iconClass('/dashboard/users')}>manage_accounts</span>
-                            <span className="text-sm font-medium">Users & Access</span>
-                        </Link>
+                        {user?.role === 'admin' && (
+                            <>
+                                <Link href="/dashboard/labs" className={linkClass('/dashboard/labs')}>
+                                    <span className={iconClass('/dashboard/labs')}>meeting_room</span>
+                                    <span className="text-sm font-medium">Labs</span>
+                                </Link>
+                                <Link href="/dashboard/users" className={linkClass('/dashboard/users')}>
+                                    <span className={iconClass('/dashboard/users')}>manage_accounts</span>
+                                    <span className="text-sm font-medium">Users & Access</span>
+                                </Link>
+                            </>
+                        )}
                         <Link href="/dashboard/credentials" className={linkClass('/dashboard/credentials')}>
                             <span className={iconClass('/dashboard/credentials')}>key</span>
                             <span className="text-sm font-medium">App Credentials</span>

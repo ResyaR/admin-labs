@@ -76,9 +76,9 @@ export async function DELETE(
       where: { id },
     })
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'PC deleted successfully' 
+    return NextResponse.json({
+      success: true,
+      message: 'PC deleted successfully'
     })
   } catch (error) {
     console.error('Error deleting PC:', error)
@@ -89,3 +89,30 @@ export async function DELETE(
   }
 }
 
+// PATCH /api/pcs/[id] - Update PC details
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+    const { location, status } = body
+
+    const updatedPC = await prisma.pC.update({
+      where: { id },
+      data: {
+        location: location,
+        status: status,
+      },
+    })
+
+    return NextResponse.json({ success: true, data: updatedPC })
+  } catch (error) {
+    console.error('Error updating PC:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
