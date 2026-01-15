@@ -561,7 +561,7 @@ export default function PCDetailPage() {
                                         </div>
                                         <div>
                                             <p className="text-slate-400 uppercase tracking-widest text-[10px] mb-1 font-bold">Serial Number</p>
-                                            <p className="text-slate-700 font-mono tracking-wide">N/A</p>
+                                            <p className="text-slate-700 font-mono tracking-wide">{ram.serialNumber || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-slate-400 uppercase tracking-widest text-[10px] mb-1 font-bold">Capacity & Type</p>
@@ -618,7 +618,7 @@ export default function PCDetailPage() {
                                         </div>
                                         <div>
                                             <p className="text-slate-400 uppercase tracking-widest text-[10px] mb-1 font-bold">Serial Number</p>
-                                            <p className="text-slate-700 font-mono tracking-wide">N/A</p>
+                                            <p className="text-slate-700 font-mono tracking-wide">{storage.serialNumber || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-slate-400 uppercase tracking-widest text-[10px] mb-1 font-bold">Capacity</p>
@@ -626,7 +626,7 @@ export default function PCDetailPage() {
                                         </div>
                                         <div>
                                             <p className="text-slate-400 uppercase tracking-widest text-[10px] mb-1 font-bold">Interface</p>
-                                            <p className="text-slate-700 font-mono">{storage.interface} <span className="text-slate-400">({storage.interface})</span></p>
+                                            <p className="text-slate-700 font-mono">{storage.interface || 'Unknown'}</p>
                                         </div>
                                     </div>
                                 </div>
