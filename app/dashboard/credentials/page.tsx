@@ -155,7 +155,7 @@ export default function CredentialsPage() {
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
                             placeholder="e.g. Science Lab 1"
-                            className="w-full bg-white text-slate-900 px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                            className="w-full bg-white text-slate-900 px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
                             required
                         />
                     </div>
@@ -166,14 +166,14 @@ export default function CredentialsPage() {
                             value={newKey}
                             onChange={(e) => setNewKey(e.target.value)}
                             placeholder="Leave empty to auto-generate"
-                            className="w-full bg-white text-slate-900 px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition font-mono"
+                            className="w-full bg-white text-slate-900 px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-mono"
                         />
                     </div>
                     <div className="md:col-span-3">
                         <button
                             type="submit"
                             disabled={actionLoading}
-                            className="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-bold transition shadow-sm flex items-center justify-center gap-2"
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-bold transition shadow-md flex items-center justify-center gap-2"
                         >
                             {actionLoading ? "Saving..." : "Add Credential"}
                         </button>
@@ -201,10 +201,10 @@ export default function CredentialsPage() {
                                 <td className="p-5 font-bold text-slate-900 text-lg">{cred.name}</td>
                                 <td className="p-5">
                                     <div className="flex items-center gap-2">
-                                        <code className="font-mono text-primary-700 bg-primary-50 px-3 py-1.5 rounded-md border border-primary-100 text-base select-all cursor-pointer hover:bg-primary-100 transition" onClick={() => navigator.clipboard.writeText(cred.credentialKey)}>
+                                        <code className="font-mono text-blue-700 bg-blue-50 px-3 py-1.5 rounded-md border border-blue-100 text-base select-all cursor-pointer hover:bg-blue-100 transition" onClick={() => navigator.clipboard.writeText(cred.credentialKey)}>
                                             {cred.credentialKey}
                                         </code>
-                                        <button onClick={() => navigator.clipboard.writeText(cred.credentialKey)} className="text-slate-400 hover:text-primary-600" title="Copy">
+                                        <button onClick={() => navigator.clipboard.writeText(cred.credentialKey)} className="text-slate-400 hover:text-blue-600" title="Copy">
                                             <span className="material-symbols-outlined text-[18px]">content_copy</span>
                                         </button>
                                     </div>
@@ -215,7 +215,7 @@ export default function CredentialsPage() {
                                     <div className="flex items-center justify-end gap-3">
                                         <button
                                             onClick={() => openEditModal(cred)}
-                                            className="text-slate-500 hover:text-primary-600 font-medium transition flex items-center gap-1"
+                                            className="text-slate-500 hover:text-blue-600 font-medium transition flex items-center gap-1"
                                         >
                                             <span className="material-symbols-outlined text-[20px]">edit</span>
                                         </button>
@@ -258,7 +258,7 @@ export default function CredentialsPage() {
                                     type="text"
                                     value={editName}
                                     onChange={(e) => setEditName(e.target.value)}
-                                    className="w-full bg-white text-slate-900 px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                                    className="w-full bg-white text-slate-900 px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
                                     required
                                 />
                             </div>
@@ -268,7 +268,7 @@ export default function CredentialsPage() {
                                     type="text"
                                     value={editKey}
                                     onChange={(e) => setEditKey(e.target.value)}
-                                    className="w-full bg-white text-slate-900 px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition font-mono"
+                                    className="w-full bg-white text-slate-900 px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-mono"
                                     required
                                 />
                                 <p className="text-xs text-amber-600 mt-2">
@@ -286,7 +286,7 @@ export default function CredentialsPage() {
                                 <button
                                     type="submit"
                                     disabled={actionLoading}
-                                    className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg transition shadow-sm disabled:opacity-50"
+                                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition shadow-sm disabled:opacity-50"
                                 >
                                     {actionLoading ? "Saving..." : "Save Changes"}
                                 </button>
