@@ -58,6 +58,18 @@ export async function POST(request: NextRequest) {
 // GET /api/pcs - Mengambil daftar semua PC (optimized for list view)
 export async function GET() {
   try {
+    // Passive Cleanup: Mark active PCs as offline if they haven't synced for 24 hours
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    await prisma.pC.updateMany({
+      where: {
+        status: 'active',
+        lastSeen: { lt: oneDayAgo },
+      },
+      data: {
+        status: 'offline',
+      },
+    })
+
     const pcs = await prisma.pC.findMany({
       select: {
         id: true,
@@ -205,6 +217,9 @@ async function createNewPC(spec: any) {
 async function updateExistingPC(existingPC: any, newSpec: any) {
   const changes: any[] = []
 
+  // Determine new status: auto-recover from 'offline' to 'active'
+  const newStatus = existingPC.status === 'offline' ? 'active' : existingPC.status
+
   // Update basic info
   await prisma.pC.update({
     where: { id: existingPC.id },
@@ -214,6 +229,7 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
       osVersion: newSpec.osVersion || existingPC.osVersion,
       osBuild: newSpec.osBuild || existingPC.osBuild,
       arch: newSpec.arch || existingPC.arch,
+      status: newStatus,
       lastSeen: new Date(),
     },
   })
