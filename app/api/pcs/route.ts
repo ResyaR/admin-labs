@@ -234,343 +234,104 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
     },
   })
 
-  // Cek perubahan CPU
+  // 1. Cek perubahan CPU
   if (newSpec.cpuModel && existingPC.cpu) {
     if (existingPC.cpu.model !== newSpec.cpuModel) {
-      changes.push({
-        pcId: existingPC.id,
-        componentType: 'cpu',
-        componentId: existingPC.cpu.id,
-        changeType: 'modified',
-        oldValue: JSON.stringify(existingPC.cpu),
-        newValue: JSON.stringify({ model: newSpec.cpuModel, cores: newSpec.cpuCores, clock: newSpec.cpuClock }),
-        message: `CPU changed from "${existingPC.cpu.model}" to "${newSpec.cpuModel}"`,
-        severity: 'warning',
+      // Cek apakah sudah ada warning baru-baru ini untuk CPU ini agar tidak spam
+      const existingWarning = await prisma.componentChange.findFirst({
+        where: { pcId: existingPC.id, componentType: 'cpu', severity: 'warning' },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      if (!existingWarning || existingWarning.newValue !== newSpec.cpuModel) {
+        changes.push({
+          pcId: existingPC.id,
+          componentType: 'cpu',
+          componentId: existingPC.cpu.id,
+          changeType: 'modified',
+          oldValue: existingPC.cpu.model,
+          newValue: newSpec.cpuModel,
+          message: `Hardware Mismatch: Actual CPU ("${newSpec.cpuModel}") does not match baseline ("${existingPC.cpu.model}")`,
+          severity: 'warning',
+        })
+      }
+    } else {
+      // SAMA - Hapus peringatan CPU jika ada
+      await prisma.componentChange.deleteMany({
+        where: { pcId: existingPC.id, componentType: 'cpu', severity: 'warning' }
       })
     }
-    await prisma.cPU.update({
-      where: { id: existingPC.cpu.id },
-      data: {
-        model: newSpec.cpuModel,
-        cores: newSpec.cpuCores || existingPC.cpu.cores,
-        clock: newSpec.cpuClock || existingPC.cpu.clock,
-      },
-    })
-  } else if (newSpec.cpuModel && !existingPC.cpu) {
-    await prisma.cPU.create({
-      data: {
-        pcId: existingPC.id,
-        model: newSpec.cpuModel,
-        cores: newSpec.cpuCores || 0,
-        clock: newSpec.cpuClock || null,
-      },
-    })
-    changes.push({
-      pcId: existingPC.id,
-      componentType: 'cpu',
-      changeType: 'added',
-      newValue: JSON.stringify({ model: newSpec.cpuModel, cores: newSpec.cpuCores, clock: newSpec.cpuClock }),
-      message: `CPU added: "${newSpec.cpuModel}"`,
-      severity: 'info',
-    })
   }
 
-  // Cek perubahan GPU
-  if (newSpec.gpu) {
-    if (existingPC.gpu) {
-      if (existingPC.gpu.model !== newSpec.gpu) {
+  // 2. Cek perubahan GPU
+  if (newSpec.gpu && existingPC.gpu) {
+    if (existingPC.gpu.model !== newSpec.gpu) {
+      const existingWarning = await prisma.componentChange.findFirst({
+        where: { pcId: existingPC.id, componentType: 'gpu', severity: 'warning' },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      if (!existingWarning || existingWarning.newValue !== newSpec.gpu) {
         changes.push({
           pcId: existingPC.id,
           componentType: 'gpu',
           componentId: existingPC.gpu.id,
           changeType: 'modified',
-          oldValue: JSON.stringify(existingPC.gpu),
-          newValue: JSON.stringify({ model: newSpec.gpu }),
-          message: `GPU changed from "${existingPC.gpu.model}" to "${newSpec.gpu}"`,
+          oldValue: existingPC.gpu.model,
+          newValue: newSpec.gpu,
+          message: `Hardware Mismatch: Actual GPU ("${newSpec.gpu}") does not match baseline ("${existingPC.gpu.model}")`,
           severity: 'warning',
         })
       }
-      await prisma.gPU.update({
-        where: { id: existingPC.gpu.id },
-        data: { model: newSpec.gpu },
-      })
     } else {
-      await prisma.gPU.create({
-        data: {
-          pcId: existingPC.id,
-          model: newSpec.gpu,
-        },
-      })
-      changes.push({
-        pcId: existingPC.id,
-        componentType: 'gpu',
-        changeType: 'added',
-        newValue: JSON.stringify({ model: newSpec.gpu }),
-        message: `GPU added: "${newSpec.gpu}"`,
-        severity: 'info',
+      await prisma.componentChange.deleteMany({
+        where: { pcId: existingPC.id, componentType: 'gpu', severity: 'warning' }
       })
     }
   }
 
-  // Cek perubahan Motherboard
-  if (newSpec.motherboard) {
-    // Pastikan motherboardSerial ditangani
-    const newMoboSerial = newSpec.motherboardSerial || null;
+  // 3. Cek perubahan RAM
+  if (newSpec.ramDetails && newSpec.ramDetails.length > 0 && existingPC.rams.length > 0) {
+    const baselineRAM = existingPC.rams[0].capacity; // We use first slot's capacity for comparison as simplified baseline
+    const actualRAM = newSpec.ramDetails[0].capacity;
 
-    if (existingPC.motherboard) {
-      if (existingPC.motherboard.model !== newSpec.motherboard) {
+    if (baselineRAM !== actualRAM) {
+      const existingWarning = await prisma.componentChange.findFirst({
+        where: { pcId: existingPC.id, componentType: 'ram', severity: 'warning' },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      if (!existingWarning || existingWarning.newValue !== actualRAM) {
         changes.push({
           pcId: existingPC.id,
-          componentType: 'motherboard',
-          componentId: existingPC.motherboard.id,
+          componentType: 'ram',
           changeType: 'modified',
-          oldValue: JSON.stringify(existingPC.motherboard),
-          newValue: JSON.stringify({ model: newSpec.motherboard, serialNumber: newMoboSerial }),
-          message: `Motherboard changed from "${existingPC.motherboard.model}" to "${newSpec.motherboard}"`,
+          oldValue: baselineRAM,
+          newValue: actualRAM,
+          message: `Hardware Mismatch: Actual RAM ("${actualRAM}") does not match baseline ("${baselineRAM}")`,
           severity: 'warning',
         })
       }
-      await prisma.motherboard.update({
-        where: { id: existingPC.motherboard.id },
-        data: {
-          model: newSpec.motherboard,
-          serialNumber: newMoboSerial
-        }
-      })
     } else {
-      await prisma.motherboard.create({
-        data: {
-          pcId: existingPC.id,
-          model: newSpec.motherboard,
-          serialNumber: newMoboSerial
-        }
-      })
-      changes.push({
-        pcId: existingPC.id,
-        componentType: 'motherboard',
-        changeType: 'added',
-        newValue: JSON.stringify({ model: newSpec.motherboard, serialNumber: newMoboSerial }),
-        message: `Motherboard added: "${newSpec.motherboard}"`,
-        severity: 'info',
+      await prisma.componentChange.deleteMany({
+        where: { pcId: existingPC.id, componentType: 'ram', severity: 'warning' }
       })
     }
   }
 
-  // Cek perubahan RAM
-  if (newSpec.ramDetails && newSpec.ramDetails.length > 0) {
-    const existingRams = existingPC.rams || []
-    const newRams = newSpec.ramDetails
+  // Update lastSeen and other non-component info
+  await prisma.pC.update({
+    where: { id: existingPC.id },
+    data: {
+      brand: newSpec.brand || existingPC.brand,
+      os: newSpec.os || existingPC.os,
+      osVersion: newSpec.osVersion || existingPC.osVersion,
+      status: newStatus,
+      lastSeen: new Date(),
+    },
+  })
 
-    // Hapus RAM yang tidak ada lagi
-    for (const existingRam of existingRams) {
-      const stillExists = newRams.some((newRam: any) =>
-        newRam.model === existingRam.model &&
-        newRam.capacity === existingRam.capacity
-      )
-      if (!stillExists) {
-        changes.push({
-          pcId: existingPC.id,
-          componentType: 'ram',
-          componentId: existingRam.id,
-          changeType: 'removed',
-          oldValue: JSON.stringify(existingRam),
-          message: `RAM removed: ${existingRam.manufacturer || ''} ${existingRam.model || ''} ${existingRam.capacity || ''}`,
-          severity: 'warning',
-        })
-        await prisma.rAM.delete({ where: { id: existingRam.id } })
-      }
-    }
-
-    // Update atau tambah RAM baru
-    for (let i = 0; i < newRams.length; i++) {
-      const newRam = newRams[i]
-      const existingRam = existingRams[i]
-
-      if (existingRam) {
-        // Cek perubahan
-        if (
-          existingRam.manufacturer !== newRam.manufacturer ||
-          existingRam.model !== newRam.model ||
-          existingRam.capacity !== newRam.capacity ||
-          existingRam.type !== newRam.type
-        ) {
-          changes.push({
-            pcId: existingPC.id,
-            componentType: 'ram',
-            componentId: existingRam.id,
-            changeType: 'modified',
-            oldValue: JSON.stringify(existingRam),
-            newValue: JSON.stringify(newRam),
-            message: `RAM slot ${i} changed`,
-            severity: 'warning',
-          })
-        }
-        await prisma.rAM.update({
-          where: { id: existingRam.id },
-          data: {
-            manufacturer: newRam.manufacturer || null,
-            model: newRam.model || null,
-            capacity: newRam.capacity || null,
-            speed: newRam.speed || null,
-            type: newRam.type || null,
-            formFactor: newRam.formFactor || null,
-            serialNumber: newRam.serialNumber || null,
-            bankLabel: newRam.bank || null,
-          },
-        })
-      } else {
-        // RAM baru
-        await prisma.rAM.create({
-          data: {
-            pcId: existingPC.id,
-            manufacturer: newRam.manufacturer || null,
-            model: newRam.model || null,
-            capacity: newRam.capacity || null,
-            speed: newRam.speed || null,
-            type: newRam.type || null,
-            formFactor: newRam.formFactor || null,
-            serialNumber: newRam.serialNumber || null,
-            bankLabel: newRam.bank || null,
-            slotIndex: i,
-          },
-        })
-        changes.push({
-          pcId: existingPC.id,
-          componentType: 'ram',
-          changeType: 'added',
-          newValue: JSON.stringify(newRam),
-          message: `RAM added to slot ${i}: ${newRam.manufacturer || ''} ${newRam.model || ''} ${newRam.capacity || ''}`,
-          severity: 'info',
-        })
-      }
-    }
-  }
-
-  // Cek perubahan Storage
-  if (newSpec.storageDetails && newSpec.storageDetails.length > 0) {
-    const existingStorages = existingPC.storages || []
-    const newStorages = newSpec.storageDetails
-
-    // Hapus storage yang tidak ada lagi
-    for (const existingStorage of existingStorages) {
-      const stillExists = newStorages.some((newStorage: any) =>
-        newStorage.model === existingStorage.model &&
-        newStorage.size === existingStorage.size
-      )
-      if (!stillExists) {
-        changes.push({
-          pcId: existingPC.id,
-          componentType: 'storage',
-          componentId: existingStorage.id,
-          changeType: 'removed',
-          oldValue: JSON.stringify(existingStorage),
-          message: `Storage removed: ${existingStorage.manufacturer || ''} ${existingStorage.model || ''} ${existingStorage.size || ''}`,
-          severity: 'warning',
-        })
-        await prisma.storage.delete({ where: { id: existingStorage.id } })
-      }
-    }
-
-    // Update atau tambah storage baru
-    for (let i = 0; i < newStorages.length; i++) {
-      const newStorage = newStorages[i]
-      const existingStorage = existingStorages[i]
-
-      if (existingStorage) {
-        // Cek perubahan
-        if (
-          existingStorage.manufacturer !== newStorage.manufacturer ||
-          existingStorage.model !== newStorage.model ||
-          existingStorage.size !== newStorage.size ||
-          existingStorage.type !== newStorage.type
-        ) {
-          changes.push({
-            pcId: existingPC.id,
-            componentType: 'storage',
-            componentId: existingStorage.id,
-            changeType: 'modified',
-            oldValue: JSON.stringify(existingStorage),
-            newValue: JSON.stringify(newStorage),
-            message: `Storage ${i} changed`,
-            severity: 'warning',
-          })
-        }
-        await prisma.storage.update({
-          where: { id: existingStorage.id },
-          data: {
-            manufacturer: newStorage.manufacturer || null,
-            model: newStorage.model || null,
-            size: newStorage.size || null,
-            interface: newStorage.interface || null,
-            type: newStorage.type || null,
-            serialNumber: newStorage.serialNumber || null,
-          },
-        })
-      } else {
-        // Storage baru
-        await prisma.storage.create({
-          data: {
-            pcId: existingPC.id,
-            manufacturer: newStorage.manufacturer || null,
-            model: newStorage.model || null,
-            size: newStorage.size || null,
-            interface: newStorage.interface || null,
-            type: newStorage.type || null,
-            serialNumber: newStorage.serialNumber || null,
-            diskIndex: i,
-          },
-        })
-        changes.push({
-          pcId: existingPC.id,
-          componentType: 'storage',
-          changeType: 'added',
-          newValue: JSON.stringify(newStorage),
-          message: `Storage added: ${newStorage.manufacturer || ''} ${newStorage.model || ''} ${newStorage.size || ''}`,
-          severity: 'info',
-        })
-      }
-    }
-  }
-  // Check changes for network interfaces (simple update for now)
-  if (newSpec.interfaces && newSpec.interfaces.length > 0) {
-    // Just delete all old and recreate new for simplicity in this version, OR smarter update.
-    // Doing smarter update to save history/ID if possible, but network interfaces can be dynamic.
-    // For now, let's just update `isUp` and IPs if matched by name, or recreate if not executing.
-
-    // Since prisma doesn't support easy bulk upsert with different criteria, we usually do delete/create or manual finding.
-    // But preserving IDs is good. Let's do a simple loop.
-
-    const existingNets = existingPC.networks || [];
-    const newNets = newSpec.interfaces;
-
-    for (const net of newNets) {
-      const match = existingNets.find((n: any) => n.name === net.name);
-      if (match) {
-        await prisma.networkInterface.update({
-          where: { id: match.id },
-          data: {
-            macAddr: net.macAddr || null,
-            ipv4: net.ipv4 || null,
-            isUp: net.isUp !== undefined ? net.isUp : true,
-            bandwidth: net.bandwidth || null
-          }
-        })
-      } else {
-        await prisma.networkInterface.create({
-          data: {
-            pcId: existingPC.id,
-            name: net.name || 'Unknown',
-            macAddr: net.macAddr || null,
-            ipv4: net.ipv4 || null,
-            isUp: net.isUp !== undefined ? net.isUp : true,
-            bandwidth: net.bandwidth || null
-          }
-        })
-      }
-    }
-  }
-
-  // Simpan semua perubahan
+  // Simpan semua peringatan baru
   if (changes.length > 0) {
     await prisma.componentChange.createMany({
       data: changes,

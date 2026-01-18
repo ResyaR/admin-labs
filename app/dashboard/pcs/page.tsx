@@ -544,9 +544,6 @@ export default function AllPCsPage() {
                                   </span>
                                 )}
                               </div>
-                              <div className="text-xs font-semibold text-red-600/80 italic">
-                                Spec Change Detected
-                              </div>
                             </div>
                           </td>
                           <td className="px-4 py-4">
@@ -666,8 +663,8 @@ export default function AllPCsPage() {
                               </span>
                             )}
                           </div>
-                          <p className={`text-xs mt-0.5 ${hasWarnings ? 'text-red-500 font-bold' : 'text-slate-500'}`}>
-                            {hasWarnings ? 'Hardware Inconsistency Detected' : (pc.brand || 'Unknown Brand')}
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {pc.brand || 'Unknown Brand'}
                           </p>
                         </div>
                         <div className="ml-2">{getStatusBadge(pc.status)}</div>

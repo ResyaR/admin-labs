@@ -125,14 +125,20 @@ export async function PATCH(
           where: { pcId: id },
           data: { model: cpuModel }
         })
+
+        // Delete old warnings for CPU
+        await tx.componentChange.deleteMany({
+          where: { pcId: id, componentType: 'cpu', severity: 'warning' }
+        })
+
         changes.push({
           pcId: id,
           componentType: 'cpu',
           changeType: 'modified',
           oldValue: currentPC.cpu.model,
           newValue: cpuModel,
-          message: `Manual Update: CPU model changed to "${cpuModel}"`,
-          severity: 'warning'
+          message: `Manual Baseline Update: CPU model set to "${cpuModel}"`,
+          severity: 'info' // Manual baseline updates should be info, not warning
         })
       }
 
@@ -144,14 +150,20 @@ export async function PATCH(
             where: { id: firstRam.id },
             data: { capacity: ramCapacity }
           })
+
+          // Delete old warnings for RAM
+          await tx.componentChange.deleteMany({
+            where: { pcId: id, componentType: 'ram', severity: 'warning' }
+          })
+
           changes.push({
             pcId: id,
             componentType: 'ram',
             changeType: 'modified',
             oldValue: firstRam.capacity,
             newValue: ramCapacity,
-            message: `Manual Update: RAM capacity changed to "${ramCapacity}"`,
-            severity: 'warning'
+            message: `Manual Baseline Update: RAM capacity set to "${ramCapacity}"`,
+            severity: 'info'
           })
         }
       }
