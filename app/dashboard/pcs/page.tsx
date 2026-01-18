@@ -205,6 +205,48 @@ export default function AllPCsPage() {
     setPcToEdit(null);
   };
 
+  const handleExportData = () => {
+    if (filteredPCs.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
+    const headers = [
+      "Hostname",
+      "Brand",
+      "OS",
+      "Location",
+      "Status",
+      "CPU",
+      "RAM",
+      "Storage",
+      "Last Seen"
+    ];
+
+    const csvRows = filteredPCs.map(pc => [
+      pc.hostname,
+      pc.brand || "N/A",
+      pc.os || "N/A",
+      pc.location || "Unassigned",
+      pc.status,
+      pc.cpu?.model || "N/A",
+      getRAMDisplay(pc.rams),
+      getStorageDisplay(pc.storages),
+      new Date(pc.lastSeen).toLocaleString()
+    ].map(val => `"${val}"`).join(","));
+
+    const csvString = [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `fleet_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Get unique filter values from data
   const uniqueOSes = Array.from(new Set(pcs.map(pc => pc.os).filter(Boolean))) as string[];
   const uniqueLocations = Array.from(new Set(pcs.map(pc => pc.location).filter(Boolean))) as string[];
@@ -304,8 +346,11 @@ export default function AllPCsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="flex items-center justify-center gap-2 h-10 px-4 rounded-md border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors">
-              <span className="material-symbols-outlined text-[18px]">file_upload</span>
+            <button
+              onClick={handleExportData}
+              className="flex items-center justify-center gap-2 h-10 px-4 rounded-md border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]">file_download</span>
               Export Data
             </button>
           </div>
@@ -424,15 +469,7 @@ export default function AllPCsPage() {
               <table className="w-full">
                 <thead className="bg-slate-100 border-b border-slate-300">
                   <tr>
-                    <th className="w-12 px-4 py-3 text-left" scope="col">
-                      <div className="flex items-center">
-                        <input
-                          className="rounded border-slate-400 bg-white text-blue-600 focus:ring-blue-500/50"
-                          type="checkbox"
-                        />
-                      </div>
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[180px]" scope="col">
+                    <th className="px-5 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[180px]" scope="col">
                       PC ID
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[200px]" scope="col">MODEL</th>
@@ -448,7 +485,7 @@ export default function AllPCsPage() {
                 <tbody className="divide-y divide-slate-200 bg-white">
                   {pcsLoading ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center">
+                      <td colSpan={7} className="px-6 py-12 text-center">
                         <div className="flex items-center justify-center gap-2 text-slate-600 font-medium">
                           <span className="material-symbols-outlined animate-spin">sync</span>
                           <span>Loading PCs...</span>
@@ -457,7 +494,7 @@ export default function AllPCsPage() {
                     </tr>
                   ) : filteredPCs.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center">
+                      <td colSpan={7} className="px-6 py-12 text-center">
                         <div className="flex flex-col items-center justify-center gap-2 text-slate-500">
                           <span className="material-symbols-outlined text-4xl text-slate-400">computer</span>
                           <span className="font-medium text-slate-600">
@@ -481,12 +518,6 @@ export default function AllPCsPage() {
                           key={pc.id}
                           className={`hover:bg-slate-50 transition-colors ${hasWarnings ? 'bg-amber-50/50' : ''} border-b border-slate-100 last:border-0`}
                         >
-                          <td className="px-4 py-4">
-                            <input
-                              className="rounded border-slate-300 bg-white text-blue-600 focus:ring-blue-500/50"
-                              type="checkbox"
-                            />
-                          </td>
                           <td className="px-4 py-4">
                             <div className="flex flex-col gap-0.5">
                               <div className="text-sm font-bold text-slate-900">
