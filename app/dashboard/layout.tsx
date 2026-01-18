@@ -77,66 +77,64 @@ export default function DashboardLayout({
 
     // Helper untuk active class
     const isActive = (path: string) => pathname === path;
-    const linkClass = (path: string) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors group ${isActive(path) ? 'bg-primary-600 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`;
-    const iconClass = (path: string) => `material-symbols-outlined text-[20px] ${isActive(path) ? '' : 'group-hover:text-primary-500 transition-colors'}`;
+    const linkClass = (path: string) => `flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 group ${isActive(path) ? 'bg-brand text-white shadow-[0_8px_20px_rgba(99,102,241,0.25)]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`;
+    const iconClass = (path: string) => `material-symbols-outlined text-[20px] ${isActive(path) ? 'font-light' : 'group-hover:text-brand transition-colors font-light'}`;
 
     return (
         <div className="font-sans bg-slate-50 text-slate-900 h-screen flex overflow-hidden selection:bg-primary-100 selection:text-primary-700">
             {/* Sidebar */}
-            <aside className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col flex-shrink-0 z-30 transition-all duration-300">
-                <div className="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-900">
-                    <div className="flex items-center gap-3">
+            <aside className="w-72 bg-slate-950 border-r border-white/5 flex flex-col flex-shrink-0 z-30 shadow-2xl relative">
+                <div className="h-20 flex items-center px-6 border-b border-white/5 bg-slate-950">
+                    <div className="flex items-center gap-3 group">
                         <div
-                            className="bg-center bg-no-repeat bg-cover rounded-md size-8 shadow-sm ring-1 ring-white/10"
+                            className="bg-center bg-no-repeat bg-contain rounded-xl size-10 shadow-lg p-2 bg-white/5 border border-white/10 group-hover:scale-105 transition-transform duration-500"
                             style={{
-                                backgroundImage:
-                                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAOR6oZf4M-MgoO-DcBzzBfVQltB08eP8yGIxAH58HgHyHfmgeQYbD8VjIWu0gJWVb4FH_LfkC63eaqZQAhfP6WyC_NhQ1UIJWBKmI4vz5_L1awJR6lQCDp3skrzhTa7UsHDtVS3bp89NQ1XfnEVjOc24lnd8BvNFrlOBdz2JmYgMpjOIpPxEGdOe24zdq19knKrXc6QsnOmevbWKo10T__CZKe_5xG1hXrgGfjf7WgG-dqO-eDp92Vx5ToCCIDb_c5_UTOGDHtTk4")',
+                                backgroundImage: 'url("/logo.png")',
                             }}
                         ></div>
                         <div className="flex flex-col">
-                            <h1 className="text-sm font-bold tracking-wide text-white uppercase">
-                                EduTech Admin
+                            <h1 className="text-sm font-display font-semibold tracking-wider text-white uppercase">
+                                Admin Labs
                             </h1>
-                            <p className="text-slate-400 text-[10px] font-medium tracking-wider">
-                                SYSTEM CONSOLE
+                            <p className="text-slate-500 text-[9px] font-mono tracking-[0.2em] opacity-60">
+                                FLEET MANAGEMENT
                             </p>
                         </div>
                     </div>
                 </div>
-                <div className="p-4 flex flex-col gap-6 overflow-y-auto flex-1">
-                    <nav className="flex flex-col gap-1">
-                        <div className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                            Overview
+                <div className="p-5 flex flex-col gap-8 overflow-y-auto flex-1 custom-scrollbar">
+                    <nav className="flex flex-col gap-1.5">
+                        <div className="px-4 mb-3 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+                            Framework
                         </div>
                         <Link href="/dashboard" className={linkClass('/dashboard')}>
                             <span className={iconClass('/dashboard')}>dashboard</span>
-                            <span className="text-sm font-medium">Dashboard</span>
+                            <span className="text-sm font-medium tracking-tight">Analytics Overview</span>
                         </Link>
                         <Link href="/dashboard/pcs" className={linkClass('/dashboard/pcs')}>
                             <span className={iconClass('/dashboard/pcs')}>computer</span>
-                            <span className="text-sm font-medium">All PCs</span>
+                            <span className="text-sm font-medium tracking-tight">Machine Fleet</span>
                         </Link>
-
                     </nav>
-                    <nav className="flex flex-col gap-1">
-                        <div className="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                            Management
+                    <nav className="flex flex-col gap-1.5">
+                        <div className="px-4 mb-3 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+                            Control Center
                         </div>
                         {user?.role === 'admin' && (
                             <>
                                 <Link href="/dashboard/labs" className={linkClass('/dashboard/labs')}>
                                     <span className={iconClass('/dashboard/labs')}>meeting_room</span>
-                                    <span className="text-sm font-medium">Labs</span>
+                                    <span className="text-sm font-medium tracking-tight">Room Assets</span>
                                 </Link>
                                 <Link href="/dashboard/users" className={linkClass('/dashboard/users')}>
                                     <span className={iconClass('/dashboard/users')}>manage_accounts</span>
-                                    <span className="text-sm font-medium">Users & Access</span>
+                                    <span className="text-sm font-medium tracking-tight">Security & Users</span>
                                 </Link>
                             </>
                         )}
                         <Link href="/dashboard/credentials" className={linkClass('/dashboard/credentials')}>
                             <span className={iconClass('/dashboard/credentials')}>key</span>
-                            <span className="text-sm font-medium">App Credentials</span>
+                            <span className="text-sm font-medium tracking-tight">Protocol Keys</span>
                         </Link>
                     </nav>
                 </div>

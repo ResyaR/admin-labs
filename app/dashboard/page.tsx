@@ -93,21 +93,21 @@ export default function DashboardPage() {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              Lab Overview
+            <h2 className="text-2xl font-display font-medium tracking-tight text-slate-900">
+              Operational Dashboard
             </h2>
-            <p className="text-sm text-slate-500 mt-1">
-              Real-time monitoring of deployed hardware assets.
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+              Real-time hardware telemetry and asset monitoring.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-md shadow-sm flex items-center gap-2">
-              <span className="size-2 rounded-full bg-green-500 animate-pulse"></span>
-              Live Updates
+            <span className="text-[10px] uppercase tracking-widest font-mono text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-2">
+              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Live Sync
             </span>
-            <Link href="/dashboard/pcs" className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm transition-colors flex items-center gap-2">
+            <Link href="/dashboard/pcs" className="bg-brand hover:brightness-110 text-white text-xs font-semibold uppercase tracking-wider px-5 py-2.5 rounded-xl shadow-lg shadow-brand/10 transition-all flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px]">list</span>
-              View Inventory
+              Full Inventory
             </Link>
           </div>
         </div>
@@ -115,102 +115,94 @@ export default function DashboardPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Total Fleet */}
-          <div className="bg-white rounded-xl border border-slate-300 shadow-md p-5 relative overflow-hidden group hover:shadow-lg transition-shadow">
-            <div className="absolute right-0 top-0 h-full w-1.5 bg-primary-600"></div>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 relative overflow-hidden group hover:border-brand/20 transition-all">
+            <div className="absolute left-0 top-0 h-1 w-full bg-brand"></div>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">
                   Total Fleet
                 </p>
-                <h3 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                <h3 className="text-4xl font-display font-medium text-slate-950 tracking-tight">
                   {totalPCs}
                 </h3>
               </div>
-              <div className="p-3 bg-primary-50 rounded-lg border border-primary-100">
-                <span className="material-symbols-outlined text-primary-600 text-[24px]">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-brand/5 group-hover:border-brand/10 transition-colors">
+                <span className="material-symbols-outlined text-brand text-[24px]">
                   computer
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-xs font-medium">
-              <span className="text-slate-600 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
-                Registered Nodes
-              </span>
+            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-slate-400">
+              Registered Nodes
             </div>
           </div>
 
           {/* Online & Active */}
-          <div className="bg-white rounded-xl border border-slate-300 shadow-md p-5 relative overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="absolute right-0 top-0 h-full w-1.5 bg-green-500"></div>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 relative overflow-hidden group hover:border-emerald-500/20 transition-all">
+            <div className="absolute left-0 top-0 h-1 w-full bg-emerald-500"></div>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">
                   Online & Active
                 </p>
-                <h3 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                <h3 className="text-4xl font-display font-medium text-slate-950 tracking-tight">
                   {activePCs}
                 </h3>
               </div>
-              <div className="p-3 bg-green-50 rounded-lg border border-green-100">
-                <span className="material-symbols-outlined text-green-600 text-[24px]">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-emerald-50 group-hover:border-emerald-100 transition-colors">
+                <span className="material-symbols-outlined text-emerald-600 text-[24px]">
                   wifi
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-xs font-medium">
-              <span className="text-green-700 bg-green-50 px-2 py-1 rounded-md border border-green-200">
-                {utilizationRate}% Online
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600">
+                {utilizationRate}% Capacity
               </span>
             </div>
           </div>
 
           {/* Maintenance */}
-          <div className="bg-white rounded-xl border border-slate-300 shadow-md p-5 relative overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="absolute right-0 top-0 h-full w-1.5 bg-amber-500"></div>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 relative overflow-hidden group hover:border-amber-500/20 transition-all">
+            <div className="absolute left-0 top-0 h-1 w-full bg-amber-500"></div>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">
                   Maintenance
                 </p>
-                <h3 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                <h3 className="text-4xl font-display font-medium text-slate-950 tracking-tight">
                   {maintenancePCs}
                 </h3>
               </div>
-              <div className="p-3 bg-orange-50 rounded-lg border border-orange-100">
-                <span className="material-symbols-outlined text-orange-500 text-[24px]">build_circle</span>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-amber-50 group-hover:border-amber-100 transition-colors">
+                <span className="material-symbols-outlined text-amber-500 text-[24px]">build_circle</span>
               </div>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-2 mt-2">
-              <div className="bg-amber-500 h-2 rounded-full" style={{ width: `${totalPCs > 0 ? (maintenancePCs / totalPCs) * 100 : 0}%` }}></div>
+            <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
+              <div className="bg-amber-500 h-full rounded-full" style={{ width: `${totalPCs > 0 ? (maintenancePCs / totalPCs) * 100 : 0}%` }}></div>
             </div>
           </div>
 
           {/* Offline */}
-          <div className="bg-white rounded-xl border border-slate-300 shadow-md p-5 relative overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="absolute right-0 top-0 h-full w-1.5 bg-red-500"></div>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 relative overflow-hidden group hover:border-red-500/20 transition-all">
+            <div className="absolute left-0 top-0 h-1 w-full bg-red-500"></div>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">
                   Offline Nodes
                 </p>
-                <h3 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                <h3 className="text-4xl font-display font-medium text-slate-950 tracking-tight">
                   {offlinePCs}
                 </h3>
               </div>
-              <div className="p-3 bg-red-50 rounded-lg border border-red-100">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-red-50 group-hover:border-red-100 transition-colors">
                 <span className="material-symbols-outlined text-red-500 text-[24px]">cloud_off</span>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-xs font-medium">
-              {offlinePCs > 0 ? (
-                <span className="text-red-700 bg-red-50 px-2 py-1 rounded-md border border-red-200">
-                  Action required
-                </span>
-              ) : (
-                <span className="text-green-700 bg-green-50 px-2 py-1 rounded-md border border-green-200">
-                  All Systems Operational
-                </span>
-              )}
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] font-mono uppercase tracking-widest ${offlinePCs > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                {offlinePCs > 0 ? 'Attention Required' : 'All Clear'}
+              </span>
             </div>
           </div>
         </div>
@@ -372,9 +364,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-12 mb-4 text-center">
-          <p className="text-xs text-slate-400">
-            © 2024 Admin Labs • Hardware Monitoring System v1.0
+        <div className="mt-12 mb-8 flex flex-col items-center gap-4">
+          <div className="h-px w-24 bg-slate-200"></div>
+          <p className="text-[10px] text-slate-400 font-mono uppercase tracking-[0.25em]">
+            Admin Labs • Protocol v2.5.0 • 2026
           </p>
         </div>
       </div>
