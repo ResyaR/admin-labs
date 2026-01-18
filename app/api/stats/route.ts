@@ -61,10 +61,19 @@ export async function GET() {
                         .map(([name, count]) => ({ name, count }))
                         .sort((a, b) => b.count - a.count);
                 })(),
-                locationBreakdown: locationBreakdown.map(item => ({
-                    name: item.location || 'Unassigned',
-                    count: item._count.location
-                })),
+                locationBreakdown: (() => {
+                    const groups: Record<string, number> = {};
+                    locationBreakdown.forEach(item => {
+                        const name = item.location || 'Unassigned';
+                        groups[name] = (groups[name] || 0) + item._count.location;
+                    });
+
+                    // Check for actual nulls in DB that groupBy might have missed or handled differently
+                    // (Ensure "Unassigned" correctly reflects the state of the fleet)
+                    return Object.entries(groups)
+                        .map(([name, count]) => ({ name, count }))
+                        .sort((a, b) => b.count - a.count);
+                })(),
                 recentChanges: recentChanges.map(change => ({
                     id: change.id,
                     severity: change.severity,
