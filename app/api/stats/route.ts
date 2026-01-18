@@ -19,7 +19,7 @@ export async function GET() {
             prisma.pC.groupBy({
                 by: ['location'],
                 _count: {
-                    location: true
+                    id: true
                 }
             }),
             prisma.componentChange.findMany({
@@ -42,7 +42,7 @@ export async function GET() {
                 offlinePCs,
                 osBreakdown: (() => {
                     const groups: Record<string, number> = {};
-                    osBreakdown.forEach(item => {
+                    osBreakdown.forEach((item: any) => {
                         let name = item.os || 'Unknown';
                         // Clean "Microsoft " prefix
                         name = name.replace(/^Microsoft\s+/, '');
@@ -63,9 +63,9 @@ export async function GET() {
                 })(),
                 locationBreakdown: (() => {
                     const groups: Record<string, number> = {};
-                    locationBreakdown.forEach(item => {
+                    locationBreakdown.forEach((item: any) => {
                         const name = item.location || 'Unassigned';
-                        groups[name] = (groups[name] || 0) + item._count.location;
+                        groups[name] = (groups[name] || 0) + item._count.id;
                     });
 
                     // Check for actual nulls in DB that groupBy might have missed or handled differently
@@ -74,7 +74,7 @@ export async function GET() {
                         .map(([name, count]) => ({ name, count }))
                         .sort((a, b) => b.count - a.count);
                 })(),
-                recentChanges: recentChanges.map(change => ({
+                recentChanges: recentChanges.map((change: any) => ({
                     id: change.id,
                     severity: change.severity,
                     message: change.message,
