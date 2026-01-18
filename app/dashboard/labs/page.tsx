@@ -9,6 +9,7 @@ interface Lab {
     name: string;
     description: string | null;
     capacity: number;
+    pcCount: number;
     createdAt?: string;
 }
 
@@ -184,7 +185,7 @@ export default function LabsPage() {
                                 <tr>
                                     <th className="px-6 py-4 text-xs font-bold text-slate-700 uppercase tracking-wider">Name</th>
                                     <th className="px-6 py-4 text-xs font-bold text-slate-700 uppercase tracking-wider">Description</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-700 uppercase tracking-wider">Capacity</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-700 uppercase tracking-wider">Occupancy</th>
                                     <th className="px-6 py-4 text-right text-xs font-bold text-slate-700 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
@@ -227,7 +228,11 @@ export default function LabsPage() {
                                                 {lab.description || '-'}
                                             </td>
                                             <td className="px-6 py-4 text-sm font-semibold text-slate-900">
-                                                {lab.capacity || 0} Sets
+                                                <span className={lab.pcCount > lab.capacity ? "text-red-600" : "text-slate-900"}>
+                                                    {lab.pcCount || 0}
+                                                </span>
+                                                <span className="text-slate-400 font-normal mx-1">/</span>
+                                                <span>{lab.capacity || 0} Sets</span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-end gap-2">
@@ -300,11 +305,23 @@ export default function LabsPage() {
                                             </div>
                                         </div>
 
-                                        {/* Capacity */}
+                                        {/* Capacity & Occupancy */}
                                         <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs font-medium text-slate-500 uppercase">Capacity:</span>
-                                                <span className="font-bold text-slate-900">{lab.capacity || 0} Sets</span>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-medium text-slate-500 uppercase">Usage:</span>
+                                                <div className="flex items-center gap-1">
+                                                    <span className={`font-bold ${lab.pcCount > lab.capacity ? "text-red-600" : "text-slate-900"}`}>
+                                                        {lab.pcCount || 0}
+                                                    </span>
+                                                    <span className="text-slate-400 text-xs font-normal">/ {lab.capacity || 0} Sets</span>
+                                                </div>
+                                            </div>
+                                            {/* Progress Bar */}
+                                            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full transition-all duration-500 ${lab.pcCount >= lab.capacity ? 'bg-amber-500' : 'bg-blue-500'}`}
+                                                    style={{ width: `${Math.min(100, (lab.pcCount / (lab.capacity || 1)) * 100)}%` }}
+                                                ></div>
                                             </div>
                                         </div>
 

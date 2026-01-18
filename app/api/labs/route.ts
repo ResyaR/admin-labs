@@ -13,7 +13,15 @@ export async function GET() {
             orderBy: { createdAt: 'desc' },
         });
 
-        return NextResponse.json({ success: true, data: labs });
+        // Count PCs for each lab
+        const labsWithCount = await Promise.all(labs.map(async (lab: any) => {
+            const pcCount = await prisma.pC.count({
+                where: { location: lab.name }
+            });
+            return { ...lab, pcCount };
+        }));
+
+        return NextResponse.json({ success: true, data: labsWithCount });
     } catch (error) {
         console.error('Error fetching labs:', error);
         return NextResponse.json({ error: 'Failed to fetch labs' }, { status: 500 });
