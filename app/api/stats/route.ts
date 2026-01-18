@@ -40,10 +40,27 @@ export async function GET() {
                 activePCs,
                 maintenancePCs,
                 offlinePCs,
-                osBreakdown: osBreakdown.map(item => ({
-                    name: item.os || 'Unknown',
-                    count: item._count.os
-                })),
+                osBreakdown: (() => {
+                    const groups: Record<string, number> = {};
+                    osBreakdown.forEach(item => {
+                        let name = item.os || 'Unknown';
+                        // Clean "Microsoft " prefix
+                        name = name.replace(/^Microsoft\s+/, '');
+
+                        // Grouping logic
+                        if (name.includes('Windows 10')) name = 'Windows 10';
+                        else if (name.includes('Windows 11')) name = 'Windows 11';
+                        else if (name.includes('Windows 7')) name = 'Windows 7';
+                        else if (name.includes('Windows 8')) name = 'Windows 8';
+                        else if (name.includes('Ubuntu')) name = 'Ubuntu';
+
+                        groups[name] = (groups[name] || 0) + item._count.os;
+                    });
+
+                    return Object.entries(groups)
+                        .map(([name, count]) => ({ name, count }))
+                        .sort((a, b) => b.count - a.count);
+                })(),
                 locationBreakdown: locationBreakdown.map(item => ({
                     name: item.location || 'Unassigned',
                     count: item._count.location
