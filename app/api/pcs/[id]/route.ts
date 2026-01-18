@@ -97,14 +97,41 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { location, status } = body
+    const { location, status, cpuModel, ramCapacity } = body
 
-    const updatedPC = await prisma.pC.update({
-      where: { id },
-      data: {
-        location: location,
-        status: status,
-      },
+    const updatedPC = await prisma.$transaction(async (tx: any) => {
+      // 1. Update basic PC info
+      const pc = await tx.pC.update({
+        where: { id },
+        data: {
+          location: location !== undefined ? location : undefined,
+          status: status !== undefined ? status : undefined,
+        },
+      })
+
+      // 2. Update CPU if provided
+      if (cpuModel) {
+        await tx.cPU.updateMany({
+          where: { pcId: id },
+          data: { model: cpuModel }
+        })
+      }
+
+      // 3. Update RAM if provided (update first slot for simplicity)
+      if (ramCapacity) {
+        const firstRam = await tx.rAM.findFirst({
+          where: { pcId: id },
+          orderBy: { slotIndex: 'asc' }
+        })
+        if (firstRam) {
+          await tx.rAM.update({
+            where: { id: firstRam.id },
+            data: { capacity: ramCapacity }
+          })
+        }
+      }
+
+      return pc
     })
 
     return NextResponse.json({ success: true, data: updatedPC })

@@ -143,6 +143,9 @@ export default function PCDetailPage() {
         }
     };
 
+    // Only show mismatch warnings if status is NOT maintenance
+    const hasWarnings = (pc?.changes?.length || 0) > 0 && pc?.status !== 'maintenance';
+
     const handleUpdateConfig = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -241,6 +244,12 @@ export default function PCDetailPage() {
                         <div className="flex items-center gap-4 flex-wrap">
                             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight font-mono">{pc.hostname}</h1>
                             {getStatusBadge(pc.status)}
+                            {hasWarnings && (
+                                <span className="flex items-center gap-1.5 px-3 py-1 bg-red-600 text-xs font-black text-white rounded-full shadow-lg animate-pulse ring-4 ring-red-100">
+                                    <span className="material-symbols-outlined text-[16px]">error</span>
+                                    HARDWARE MISMATCH
+                                </span>
+                            )}
                         </div>
                         <p className="text-slate-500 mt-2 flex items-center gap-2 text-sm md:text-base">
                             <span className="material-symbols-outlined text-lg text-slate-400">location_on</span>

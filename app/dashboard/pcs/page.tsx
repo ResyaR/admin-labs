@@ -66,6 +66,8 @@ export default function AllPCsPage() {
   const [labs, setLabs] = useState<any[]>([]);
   const [editLocation, setEditLocation] = useState("");
   const [editStatus, setEditStatus] = useState("");
+  const [editCPU, setEditCPU] = useState("");
+  const [editRAM, setEditRAM] = useState("");
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -165,6 +167,8 @@ export default function AllPCsPage() {
     setPcToEdit(pc);
     setEditLocation(pc.location || "");
     setEditStatus(pc.status || "active");
+    setEditCPU(pc.cpu?.model || "");
+    setEditRAM(getRAMDisplay(pc.rams));
     setShowEditModal(true);
   };
 
@@ -177,7 +181,9 @@ export default function AllPCsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           location: editLocation || null,
-          status: editStatus
+          status: editStatus,
+          cpuModel: editCPU,
+          ramCapacity: editRAM
         }),
       });
       if (!response.ok) {
@@ -186,7 +192,13 @@ export default function AllPCsPage() {
       }
       const data = await response.json();
       if (data.success) {
-        setPcs(pcs.map(pc => pc.id === pcToEdit.id ? { ...pc, location: editLocation, status: editStatus } : pc));
+        setPcs(pcs.map(pc => pc.id === pcToEdit.id ? {
+          ...pc,
+          location: editLocation,
+          status: editStatus,
+          cpu: pc.cpu ? { ...pc.cpu, model: editCPU } : pc.cpu,
+          rams: pc.rams.length > 0 ? [{ ...pc.rams[0], capacity: editRAM }, ...pc.rams.slice(1)] : pc.rams
+        } : pc));
         setShowEditModal(false);
         setPcToEdit(null);
       } else {
@@ -505,7 +517,8 @@ export default function AllPCsPage() {
                     </tr>
                   ) : (
                     filteredPCs.map((pc) => {
-                      const hasWarnings = (pc._count?.changes || 0) > 0;
+                      // Only show warning if NOT in maintenance
+                      const hasWarnings = (pc._count?.changes || 0) > 0 && pc.status !== 'maintenance';
                       const lastSeenDate = new Date(pc.lastSeen);
                       const lastSeenFormatted = lastSeenDate.toLocaleDateString('en-US', {
                         month: 'short',
@@ -624,7 +637,8 @@ export default function AllPCsPage() {
               </div>
             ) : (
               filteredPCs.map((pc) => {
-                const hasWarnings = (pc._count?.changes || 0) > 0;
+                // Only show warning if NOT in maintenance
+                const hasWarnings = (pc._count?.changes || 0) > 0 && pc.status !== 'maintenance';
                 const lastSeenDate = new Date(pc.lastSeen);
                 const lastSeenFormatted = lastSeenDate.toLocaleDateString('en-US', {
                   month: 'short',
@@ -832,6 +846,42 @@ export default function AllPCsPage() {
                   </button>
                 </div>
                 <p className="text-xs text-slate-500 mt-3 italic">Manual status change will persist until the next automated check.</p>
+              </div>
+
+              {/* Component Editing Section */}
+              <div className="mt-6 border-t border-slate-100 pt-6">
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sm">settings</span>
+                  Hardware Baseline (For Mismatch Detection)
+                </h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1">Target CPU Model</label>
+                    <input
+                      type="text"
+                      value={editCPU}
+                      onChange={e => setEditCPU(e.target.value)}
+                      placeholder="e.g. Intel Core i5-12400"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1">Target RAM Capacity</label>
+                    <input
+                      type="text"
+                      value={editRAM}
+                      onChange={e => setEditRAM(e.target.value)}
+                      placeholder="e.g. 16GB"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-purple-500/20 outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 p-3 bg-blue-50/50 rounded-lg border border-blue-100 flex gap-3">
+                  <span className="material-symbols-outlined text-blue-600 text-[18px]">info</span>
+                  <p className="text-[10px] text-blue-700 leading-relaxed font-medium">
+                    Changing these values will define what is "Correct". If the actual PC sends different data, it will trigger a <strong className="text-red-600">MISMATCHED</strong> alert, unless status is set to <strong className="text-amber-600">Service/Maintenance</strong>.
+                  </p>
+                </div>
               </div>
             </div>
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
