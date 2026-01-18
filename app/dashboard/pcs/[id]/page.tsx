@@ -71,6 +71,7 @@ interface PCDetail {
         componentType: string;
         oldValue: string | null;
         newValue: string | null;
+        severity: string;
         createdAt: string;
     }>;
 }
@@ -143,8 +144,8 @@ export default function PCDetailPage() {
         }
     };
 
-    // Only show mismatch warnings if status is NOT maintenance
-    const hasWarnings = (pc?.changes?.length || 0) > 0 && pc?.status !== 'maintenance';
+    // Only show mismatch warnings if status is NOT maintenance and there are warning/critical changes
+    const hasWarnings = (pc?.changes?.filter(c => c.severity === 'warning' || c.severity === 'critical').length || 0) > 0 && pc?.status !== 'maintenance';
 
     const handleUpdateConfig = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -156,7 +157,7 @@ export default function PCDetailPage() {
             });
             const data = await res.json();
             if (data.success) {
-                setPc({ ...pc!, location: editForm.location, status: editForm.status });
+                await fetchPCDetail();
                 setShowEditModal(false);
             } else {
                 alert('Failed to update: ' + (data.error || 'Unknown error'));

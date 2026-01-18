@@ -26,7 +26,7 @@ export async function GET(
         },
         changes: {
           where: {
-            severity: { in: ['warning', 'critical'] },
+            severity: { in: ['info', 'warning', 'critical'] },
           },
           orderBy: { createdAt: 'desc' },
           take: 10,
@@ -110,7 +110,24 @@ export async function PATCH(
 
       const changes = [];
 
-      // 1. Update basic PC info
+      // 1. Update basic PC info & Log changes
+      if (location !== undefined && currentPC.location !== location) {
+        changes.push({
+          pcId: id, componentType: 'system', changeType: 'modified',
+          oldValue: currentPC.location || 'Unassigned', newValue: location || 'Unassigned',
+          message: `Location changed to "${location || 'Unassigned'}"`,
+          severity: 'info'
+        })
+      }
+      if (status !== undefined && currentPC.status !== status) {
+        changes.push({
+          pcId: id, componentType: 'system', changeType: 'modified',
+          oldValue: currentPC.status, newValue: status,
+          message: `Status changed to "${status.toUpperCase()}"`,
+          severity: 'info'
+        })
+      }
+
       const pc = await tx.pC.update({
         where: { id },
         data: {
