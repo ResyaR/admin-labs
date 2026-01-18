@@ -258,9 +258,6 @@ export default function PCDetailPage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-sm hover:border-slate-300">
-                            <span className="material-symbols-outlined text-lg">print</span> Print QR
-                        </button>
                         <button
                             onClick={() => setShowEditModal(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:translate-y-0.5"
