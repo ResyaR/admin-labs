@@ -100,6 +100,16 @@ export async function PATCH(
     const { location, status, cpuModel, ramCapacity } = body
 
     const updatedPC = await prisma.$transaction(async (tx: any) => {
+      // 0. Get current data for comparison
+      const currentPC = await tx.pC.findUnique({
+        where: { id },
+        include: { cpu: true, rams: { orderBy: { slotIndex: 'asc' } } }
+      })
+
+      if (!currentPC) throw new Error("PC not found");
+
+      const changes = [];
+
       // 1. Update basic PC info
       const pc = await tx.pC.update({
         where: { id },
@@ -109,26 +119,48 @@ export async function PATCH(
         },
       })
 
-      // 2. Update CPU if provided
-      if (cpuModel) {
+      // 2. Update CPU if provided and different
+      if (cpuModel && currentPC.cpu && currentPC.cpu.model !== cpuModel) {
         await tx.cPU.updateMany({
           where: { pcId: id },
           data: { model: cpuModel }
         })
+        changes.push({
+          pcId: id,
+          componentType: 'cpu',
+          changeType: 'modified',
+          oldValue: currentPC.cpu.model,
+          newValue: cpuModel,
+          message: `Manual Update: CPU model changed to "${cpuModel}"`,
+          severity: 'warning'
+        })
       }
 
-      // 3. Update RAM if provided (update first slot for simplicity)
+      // 3. Update RAM if provided and different
       if (ramCapacity) {
-        const firstRam = await tx.rAM.findFirst({
-          where: { pcId: id },
-          orderBy: { slotIndex: 'asc' }
-        })
-        if (firstRam) {
+        const firstRam = currentPC.rams[0];
+        if (firstRam && firstRam.capacity !== ramCapacity) {
           await tx.rAM.update({
             where: { id: firstRam.id },
             data: { capacity: ramCapacity }
           })
+          changes.push({
+            pcId: id,
+            componentType: 'ram',
+            changeType: 'modified',
+            oldValue: firstRam.capacity,
+            newValue: ramCapacity,
+            message: `Manual Update: RAM capacity changed to "${ramCapacity}"`,
+            severity: 'warning'
+          })
         }
+      }
+
+      // 4. Record changes in History
+      if (changes.length > 0) {
+        await tx.componentChange.createMany({
+          data: changes
+        })
       }
 
       return pc

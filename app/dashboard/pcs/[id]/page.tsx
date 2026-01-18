@@ -71,7 +71,7 @@ interface PCDetail {
         componentType: string;
         oldValue: string | null;
         newValue: string | null;
-        detectedAt: string;
+        createdAt: string;
     }>;
 }
 
@@ -612,7 +612,7 @@ export default function PCDetailPage() {
                                             <span className="size-2 bg-slate-400 rounded-full group-hover:bg-blue-500 transition-colors"></span>
                                         </span>
                                         <div>
-                                            <p className="text-[10px] font-bold text-slate-400 font-mono mb-0.5">{formatDate(change.detectedAt)}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 font-mono mb-0.5">{formatDate(change.createdAt)}</p>
                                             <p className="text-sm font-bold text-slate-900 leading-tight">
                                                 {change.changeType.replace('_', ' ')}: {change.componentType}
                                             </p>
