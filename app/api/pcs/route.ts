@@ -234,52 +234,40 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
     },
   })
 
-  // 1. Cek perubahan CPU
+  // 1. Check CPU
   if (newSpec.cpuModel && existingPC.cpu) {
     if (existingPC.cpu.model !== newSpec.cpuModel) {
-      // Cek apakah sudah ada warning baru-baru ini untuk CPU ini agar tidak spam
       const existingWarning = await prisma.componentChange.findFirst({
         where: { pcId: existingPC.id, componentType: 'cpu', severity: 'warning' },
         orderBy: { createdAt: 'desc' }
       })
-
       if (!existingWarning || existingWarning.newValue !== newSpec.cpuModel) {
         changes.push({
-          pcId: existingPC.id,
-          componentType: 'cpu',
-          componentId: existingPC.cpu.id,
-          changeType: 'modified',
-          oldValue: existingPC.cpu.model,
-          newValue: newSpec.cpuModel,
-          message: `Hardware Mismatch: Actual CPU ("${newSpec.cpuModel}") does not match baseline ("${existingPC.cpu.model}")`,
+          pcId: existingPC.id, componentType: 'cpu', changeType: 'modified',
+          oldValue: existingPC.cpu.model, newValue: newSpec.cpuModel,
+          message: `Hardware Mismatch: Actual CPU ("${newSpec.cpuModel}") vs Baseline ("${existingPC.cpu.model}")`,
           severity: 'warning',
         })
       }
     } else {
-      // SAMA - Hapus peringatan CPU jika ada
       await prisma.componentChange.deleteMany({
         where: { pcId: existingPC.id, componentType: 'cpu', severity: 'warning' }
       })
     }
   }
 
-  // 2. Cek perubahan GPU
+  // 2. Check GPU
   if (newSpec.gpu && existingPC.gpu) {
     if (existingPC.gpu.model !== newSpec.gpu) {
       const existingWarning = await prisma.componentChange.findFirst({
         where: { pcId: existingPC.id, componentType: 'gpu', severity: 'warning' },
         orderBy: { createdAt: 'desc' }
       })
-
       if (!existingWarning || existingWarning.newValue !== newSpec.gpu) {
         changes.push({
-          pcId: existingPC.id,
-          componentType: 'gpu',
-          componentId: existingPC.gpu.id,
-          changeType: 'modified',
-          oldValue: existingPC.gpu.model,
-          newValue: newSpec.gpu,
-          message: `Hardware Mismatch: Actual GPU ("${newSpec.gpu}") does not match baseline ("${existingPC.gpu.model}")`,
+          pcId: existingPC.id, componentType: 'gpu', changeType: 'modified',
+          oldValue: existingPC.gpu.model, newValue: newSpec.gpu,
+          message: `Hardware Mismatch: Actual GPU ("${newSpec.gpu}") vs Baseline ("${existingPC.gpu.model}")`,
           severity: 'warning',
         })
       }
@@ -290,9 +278,31 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
     }
   }
 
-  // 3. Cek perubahan RAM
+  // 3. Check Motherboard
+  if (newSpec.motherboard && existingPC.motherboard) {
+    if (existingPC.motherboard.model !== newSpec.motherboard) {
+      const existingWarning = await prisma.componentChange.findFirst({
+        where: { pcId: existingPC.id, componentType: 'motherboard', severity: 'warning' },
+        orderBy: { createdAt: 'desc' }
+      })
+      if (!existingWarning || existingWarning.newValue !== newSpec.motherboard) {
+        changes.push({
+          pcId: existingPC.id, componentType: 'motherboard', changeType: 'modified',
+          oldValue: existingPC.motherboard.model, newValue: newSpec.motherboard,
+          message: `Hardware Mismatch: Actual Board ("${newSpec.motherboard}") vs Baseline ("${existingPC.motherboard.model}")`,
+          severity: 'warning',
+        })
+      }
+    } else {
+      await prisma.componentChange.deleteMany({
+        where: { pcId: existingPC.id, componentType: 'motherboard', severity: 'warning' }
+      })
+    }
+  }
+
+  // 4. Check RAM
   if (newSpec.ramDetails && newSpec.ramDetails.length > 0 && existingPC.rams.length > 0) {
-    const baselineRAM = existingPC.rams[0].capacity; // We use first slot's capacity for comparison as simplified baseline
+    const baselineRAM = existingPC.rams[0].capacity;
     const actualRAM = newSpec.ramDetails[0].capacity;
 
     if (baselineRAM !== actualRAM) {
@@ -300,15 +310,11 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
         where: { pcId: existingPC.id, componentType: 'ram', severity: 'warning' },
         orderBy: { createdAt: 'desc' }
       })
-
       if (!existingWarning || existingWarning.newValue !== actualRAM) {
         changes.push({
-          pcId: existingPC.id,
-          componentType: 'ram',
-          changeType: 'modified',
-          oldValue: baselineRAM,
-          newValue: actualRAM,
-          message: `Hardware Mismatch: Actual RAM ("${actualRAM}") does not match baseline ("${baselineRAM}")`,
+          pcId: existingPC.id, componentType: 'ram', changeType: 'modified',
+          oldValue: baselineRAM, newValue: actualRAM,
+          message: `Hardware Mismatch: Actual RAM ("${actualRAM}") vs Baseline ("${baselineRAM}")`,
           severity: 'warning',
         })
       }

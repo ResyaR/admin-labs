@@ -119,53 +119,49 @@ export async function PATCH(
         },
       })
 
-      // 2. Update CPU if provided and different
-      if (cpuModel && currentPC.cpu && currentPC.cpu.model !== cpuModel) {
-        await tx.cPU.updateMany({
-          where: { pcId: id },
-          data: { model: cpuModel }
-        })
+      // 2. Update CPU baseline
+      if (cpuModel !== undefined) {
+        if (cpuModel && currentPC.cpu && currentPC.cpu.model !== cpuModel) {
+          await tx.cPU.updateMany({
+            where: { pcId: id },
+            data: { model: cpuModel }
+          })
 
-        // Delete old warnings for CPU
+          changes.push({
+            pcId: id, componentType: 'cpu', changeType: 'modified',
+            oldValue: currentPC.cpu.model, newValue: cpuModel,
+            message: `Manual Baseline Update: CPU set to "${cpuModel}"`,
+            severity: 'info'
+          })
+        }
+
+        // ALWAYS delete old warnings for CPU when baseline is explicitly touched/validated
         await tx.componentChange.deleteMany({
           where: { pcId: id, componentType: 'cpu', severity: 'warning' }
         })
-
-        changes.push({
-          pcId: id,
-          componentType: 'cpu',
-          changeType: 'modified',
-          oldValue: currentPC.cpu.model,
-          newValue: cpuModel,
-          message: `Manual Baseline Update: CPU model set to "${cpuModel}"`,
-          severity: 'info' // Manual baseline updates should be info, not warning
-        })
       }
 
-      // 3. Update RAM if provided and different
-      if (ramCapacity) {
+      // 3. Update RAM baseline
+      if (ramCapacity !== undefined) {
         const firstRam = currentPC.rams[0];
-        if (firstRam && firstRam.capacity !== ramCapacity) {
+        if (ramCapacity && firstRam && firstRam.capacity !== ramCapacity) {
           await tx.rAM.update({
             where: { id: firstRam.id },
             data: { capacity: ramCapacity }
           })
 
-          // Delete old warnings for RAM
-          await tx.componentChange.deleteMany({
-            where: { pcId: id, componentType: 'ram', severity: 'warning' }
-          })
-
           changes.push({
-            pcId: id,
-            componentType: 'ram',
-            changeType: 'modified',
-            oldValue: firstRam.capacity,
-            newValue: ramCapacity,
-            message: `Manual Baseline Update: RAM capacity set to "${ramCapacity}"`,
+            pcId: id, componentType: 'ram', changeType: 'modified',
+            oldValue: firstRam.capacity, newValue: ramCapacity,
+            message: `Manual Baseline Update: RAM set to "${ramCapacity}"`,
             severity: 'info'
           })
         }
+
+        // ALWAYS delete old warnings for RAM when baseline is explicitly touched/validated
+        await tx.componentChange.deleteMany({
+          where: { pcId: id, componentType: 'ram', severity: 'warning' }
+        })
       }
 
       // 4. Record changes in History
