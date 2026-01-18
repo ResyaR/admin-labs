@@ -516,15 +516,23 @@ export default function AllPCsPage() {
                       return (
                         <tr
                           key={pc.id}
-                          className={`hover:bg-slate-50 transition-colors ${hasWarnings ? 'bg-amber-50/50' : ''} border-b border-slate-100 last:border-0`}
+                          className={`hover:bg-slate-50 transition-colors ${hasWarnings ? 'bg-red-50/60' : ''} border-b border-slate-100 last:border-0`}
                         >
                           <td className="px-4 py-4">
-                            <div className="flex flex-col gap-0.5">
-                              <div className="text-sm font-bold text-slate-900">
-                                {pc.hostname}
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <div className="text-sm font-bold text-slate-900">
+                                  {pc.hostname}
+                                </div>
+                                {hasWarnings && (
+                                  <span className="flex items-center gap-1.5 px-2 py-0.5 bg-red-600 text-[10px] font-black text-white rounded-full shadow-md animate-pulse ring-2 ring-red-100">
+                                    <span className="material-symbols-outlined text-[14px]">error</span>
+                                    MISMATCHED
+                                  </span>
+                                )}
                               </div>
-                              <div className="text-xs font-medium text-slate-500">
-                                {pc.brand || 'Unknown Brand'}
+                              <div className="text-xs font-semibold text-red-600/80 italic">
+                                Spec Change Detected
                               </div>
                             </div>
                           </td>
@@ -626,18 +634,26 @@ export default function AllPCsPage() {
                 return (
                   <div
                     key={pc.id}
-                    className={`bg-white rounded-xl border-2 shadow-sm hover:shadow-md transition-all overflow-hidden group ${hasWarnings ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200'
+                    className={`bg-white rounded-xl border-2 shadow-sm hover:shadow-md transition-all overflow-hidden group ${hasWarnings ? 'border-red-200 bg-red-50/30' : 'border-slate-200'
                       }`}
                   >
                     <div className="p-5">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-bold text-slate-900 truncate" title={pc.hostname}>
-                            {pc.hostname}
-                          </h3>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            {pc.brand || 'Unknown Brand'}
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-base font-bold text-slate-900 truncate" title={pc.hostname}>
+                              {pc.hostname}
+                            </h3>
+                            {hasWarnings && (
+                              <span className="flex items-center gap-1 px-1.5 py-0.5 bg-red-600 text-[8px] font-black text-white rounded-full shadow-md animate-pulse ring-2 ring-red-100 flex-shrink-0">
+                                <span className="material-symbols-outlined text-[12px]">error</span>
+                                MISMATCHED
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-xs mt-0.5 ${hasWarnings ? 'text-red-500 font-bold' : 'text-slate-500'}`}>
+                            {hasWarnings ? 'Hardware Inconsistency Detected' : (pc.brand || 'Unknown Brand')}
                           </p>
                         </div>
                         <div className="ml-2">{getStatusBadge(pc.status)}</div>
