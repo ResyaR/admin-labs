@@ -65,6 +65,7 @@ export default function AllPCsPage() {
   const [pcToEdit, setPcToEdit] = useState<PC | null>(null);
   const [labs, setLabs] = useState<any[]>([]);
   const [editLocation, setEditLocation] = useState("");
+  const [editStatus, setEditStatus] = useState("");
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -163,6 +164,7 @@ export default function AllPCsPage() {
   const handleEditClick = (pc: PC) => {
     setPcToEdit(pc);
     setEditLocation(pc.location || "");
+    setEditStatus(pc.status || "active");
     setShowEditModal(true);
   };
 
@@ -175,7 +177,7 @@ export default function AllPCsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           location: editLocation || null,
-          status: pcToEdit.status
+          status: editStatus
         }),
       });
       if (!response.ok) {
@@ -184,7 +186,7 @@ export default function AllPCsPage() {
       }
       const data = await response.json();
       if (data.success) {
-        setPcs(pcs.map(pc => pc.id === pcToEdit.id ? { ...pc, location: editLocation } : pc));
+        setPcs(pcs.map(pc => pc.id === pcToEdit.id ? { ...pc, location: editLocation, status: editStatus } : pc));
         setShowEditModal(false);
         setPcToEdit(null);
       } else {
@@ -750,6 +752,39 @@ export default function AllPCsPage() {
                   ))}
                 </select>
                 <p className="text-xs text-slate-500 mt-2">Select the physical lab/location for this device.</p>
+              </div>
+
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Operational Status
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditStatus("active")}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${editStatus === "active" ? "bg-emerald-50 border-emerald-500 text-emerald-700" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Active</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditStatus("maintenance")}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${editStatus === "maintenance" ? "bg-amber-50 border-amber-500 text-amber-700" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">build</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Service</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditStatus("offline")}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${editStatus === "offline" ? "bg-slate-50 border-slate-400 text-slate-700" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">block</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Offline</span>
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 mt-3 italic">Manual status change will persist until the next automated check.</p>
               </div>
             </div>
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
