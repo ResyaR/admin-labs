@@ -69,12 +69,35 @@ export default function AllPCsPage() {
   const [editCPU, setEditCPU] = useState("");
   const [editRAM, setEditRAM] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
-    fetchUser();
-    fetchPCs();
-    fetchLabs();
+    const fetchInitialData = async () => {
+      await fetchUser();
+      fetchLabs();
+    };
+    fetchInitialData();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      const activeLabId = localStorage.getItem('activeLabId');
+      if (user.role === 'guru' && !activeLabId) {
+        setToastMessage("Pilih Lab terlebih dahulu untuk melihat daftar PC!");
+        setShowToast(true);
+        setPcsLoading(false);
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
+        return;
+      }
+      fetchPCs(activeLabId);
+    }
+  }, [user]);
+
+  const activeLabId = typeof window !== 'undefined' ? localStorage.getItem('activeLabId') : null;
+  const isGuruWithoutLab = user?.role === 'guru' && !activeLabId;
 
   const fetchUser = async () => {
     try {
@@ -95,10 +118,11 @@ export default function AllPCsPage() {
     }
   };
 
-  const fetchPCs = async () => {
+  const fetchPCs = async (labId?: string | null) => {
     try {
       setPcsLoading(true);
-      const response = await fetch('/api/pcs');
+      const url = labId ? `/api/pcs?labId=${labId}` : '/api/pcs';
+      const response = await fetch(url);
       if (!response.ok) {
         console.error('Failed to fetch PCs');
         return;
@@ -322,14 +346,14 @@ export default function AllPCsPage() {
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Active
+            Aktif
           </span>
         );
       case "maintenance":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-            Maintenance
+            Perbaikan
           </span>
         );
       case "offline":
@@ -345,561 +369,608 @@ export default function AllPCsPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="w-full mx-auto flex flex-col gap-6">
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              All PCs List
-            </h2>
-            <p className="text-sm text-slate-600 mt-1">
-              Manage and monitor all computer specifications across school labs.
-            </p>
+    <div className="p-4 pt-2">
+      <div className="w-full mx-auto flex flex-col gap-4">
+        {/* Toast Notification */}
+        {showToast && (
+          <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top-5 fade-in duration-300">
+            <div className="bg-red-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 max-w-md">
+              <div className="size-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-2xl">warning</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-sm uppercase tracking-wide">Akses Ditolak</p>
+                <p className="text-red-100 text-sm">{toastMessage}</p>
+              </div>
+              <button
+                onClick={() => setShowToast(false)}
+                className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleExportData}
-              className="flex items-center justify-center gap-2 h-10 px-4 rounded-md border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
-            >
-              <span className="material-symbols-outlined text-[18px]">file_download</span>
-              Export Data
-            </button>
-          </div>
-        </div>
+        )}
 
-        {/* Filters Bar - Fixed Alignment */}
-        <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4">
-          <div className="flex flex-col gap-4">
-            {/* Search Bar */}
-            <div className="w-full">
-              <div className="relative flex items-center h-10 w-full max-w-md rounded-md bg-white border border-slate-300 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+        {!isGuruWithoutLab && <>
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm">
+            <Link href="/dashboard" className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
+              <span className="material-symbols-outlined text-[18px]">dashboard</span>
+              Dashboard
+            </Link>
+            <span className="material-symbols-outlined text-[16px] text-slate-400">chevron_right</span>
+            <span className="font-bold text-slate-900">Manajemen Komputer</span>
+          </div>
+
+          {/* Page Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 uppercase">
+                {user?.role === 'guru' ? `Daftar PC: ${localStorage.getItem('activeLabName') || 'Lab'}` : 'Daftar Semua Komputer'}
+              </h2>
+              <p className="text-sm text-slate-600 mt-1 italic">
+                {user?.role === 'guru'
+                  ? 'Menampilkan daftar perangkat di lab yang Anda pilih saat ini.'
+                  : 'Kelola dan pantau spesifikasi semua komputer pada fleet lab Anda.'}
+              </p>
+            </div>
+            {user?.role === 'admin' && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleExportData}
+                  className="flex items-center justify-center gap-2 h-10 px-4 rounded-md border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">file_download</span>
+                  Ekspor Data
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Filters Bar - Single Line */}
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm px-4 py-2">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Search Bar */}
+              <div className="relative flex items-center h-9 flex-1 min-w-[200px] max-w-xs rounded-md bg-white border border-slate-300 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
                 <div className="flex items-center justify-center pl-3 pr-2">
-                  <span className="material-symbols-outlined text-slate-400 text-[18px]">
+                  <span className="material-symbols-outlined text-slate-400 text-[16px]">
                     search
                   </span>
                 </div>
                 <input
                   className="w-full h-full bg-transparent border-none text-sm text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-none"
-                  placeholder="Search by hostname, brand, CPU, location..."
+                  placeholder="Cari hostname, CPU, lokasi..."
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-            </div>
 
-            {/* Filters Row */}
-            <div className="flex flex-wrap items-center gap-3 justify-between">
-              <div className="flex flex-wrap items-center gap-3">
-                <select
-                  value={osFilter}
-                  onChange={(e) => setOsFilter(e.target.value)}
-                  className="h-10 px-4 rounded-md border border-slate-300 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                >
-                  <option value="all">OS: All</option>
-                  {uniqueOSes.map(os => (
-                    <option key={os} value={os}>{os}</option>
-                  ))}
-                </select>
+              {/* Filters */}
+              <select
+                value={osFilter}
+                onChange={(e) => setOsFilter(e.target.value)}
+                className="h-9 px-3 rounded-md border border-slate-300 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+              >
+                <option value="all">OS: Semua</option>
+                {uniqueOSes.map(os => (
+                  <option key={os} value={os}>{os}</option>
+                ))}
+              </select>
+              {user?.role === 'admin' && (
                 <select
                   value={locationFilter}
                   onChange={(e) => setLocationFilter(e.target.value)}
-                  className="h-10 px-4 rounded-md border border-slate-300 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                  className="h-9 px-3 rounded-md border border-slate-300 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                 >
-                  <option value="all">Location: All</option>
+                  <option value="all">Lokasi: Semua</option>
                   {uniqueLocations.map(location => (
                     <option key={location} value={location}>{location}</option>
                   ))}
                 </select>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-10 px-4 rounded-md border border-slate-300 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                >
-                  <option value="all">Status: All</option>
-                  <option value="active">Active</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="offline">Offline</option>
-                </select>
-              </div>
+              )}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-9 px-3 rounded-md border border-slate-300 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+              >
+                <option value="all">Status: Semua</option>
+                <option value="active">Aktif</option>
+                <option value="maintenance">Perbaikan</option>
+                <option value="offline">Offline</option>
+              </select>
+
+              {/* Spacer */}
+              <div className="flex-1"></div>
 
               {/* View Toggle */}
-              <div className="flex bg-slate-100 p-1 rounded-md border border-slate-200">
+              <div className="flex bg-slate-100 p-0.5 rounded-md border border-slate-200">
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`p-2 rounded transition-all ${viewMode === "table"
+                  className={`p-1.5 rounded transition-all ${viewMode === "table"
                     ? "bg-white shadow-sm text-blue-600"
                     : "hover:bg-slate-200 text-slate-500"
                     }`}
-                  title="Table View"
+                  title="Tampilan Tabel"
                 >
-                  <span className="material-symbols-outlined text-[20px]">table_rows</span>
+                  <span className="material-symbols-outlined text-[18px]">table_rows</span>
                 </button>
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded transition-all ${viewMode === "grid"
+                  className={`p-1.5 rounded transition-all ${viewMode === "grid"
                     ? "bg-white shadow-sm text-blue-600"
                     : "hover:bg-slate-200 text-slate-500"
                     }`}
-                  title="Card View"
+                  title="Tampilan Kartu"
                 >
-                  <span className="material-symbols-outlined text-[20px]">grid_view</span>
+                  <span className="material-symbols-outlined text-[18px]">grid_view</span>
                 </button>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Results Count */}
-        {!pcsLoading && (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-600">
-              Showing <span className="font-bold text-slate-900">{filteredPCs.length}</span> of <span className="font-bold text-slate-900">{pcs.length}</span> PCs
-            </span>
-            {(searchQuery || osFilter !== "all" || locationFilter !== "all" || statusFilter !== "all") && (
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setOsFilter("all");
-                  setLocationFilter("all");
-                  setStatusFilter("all");
-                }}
-                className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
-              >
-                <span className="material-symbols-outlined text-[18px]">clear</span>
-                Clear Filters
-              </button>
-            )}
-          </div>
-        )}
 
-        {/* Content - Table or Grid View */}
-        {viewMode === "table" ? (
-          <div className="bg-white rounded-xl border border-slate-300 shadow-md overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-100 border-b border-slate-300">
-                  <tr>
-                    <th className="px-5 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[180px]" scope="col">
-                      PC ID
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[200px]" scope="col">MODEL</th>
-                    <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[180px]" scope="col">SPECS</th>
-                    <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[120px]" scope="col">LOCATION</th>
-                    <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[100px]" scope="col">STATUS</th>
-                    <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[120px]" scope="col">LAST SEEN</th>
-                    <th className="w-16 px-4 py-3 text-center" scope="col">
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 bg-white">
-                  {pcsLoading ? (
+          {/* Content - Table or Grid View */}
+          {viewMode === "table" ? (
+            <div className="bg-white rounded-xl border border-slate-300 shadow-md overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-100 border-b border-slate-300">
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center">
-                        <div className="flex items-center justify-center gap-2 text-slate-600 font-medium">
-                          <span className="material-symbols-outlined animate-spin">sync</span>
-                          <span>Loading PCs...</span>
-                        </div>
-                      </td>
+                      <th className="px-5 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[180px]" scope="col">
+                        ID KOMPUTER
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[200px]" scope="col">MODEL</th>
+                      <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[180px]" scope="col">SPESIFIKASI</th>
+                      <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[120px]" scope="col">LOKASI</th>
+                      <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[100px]" scope="col">STATUS</th>
+                      <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[120px]" scope="col">TERAKHIR AKTIF</th>
+                      <th className="w-16 px-4 py-3 text-center" scope="col">
+                        <span className="sr-only">Aksi</span>
+                      </th>
                     </tr>
-                  ) : filteredPCs.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center">
-                        <div className="flex flex-col items-center justify-center gap-2 text-slate-500">
-                          <span className="material-symbols-outlined text-4xl text-slate-400">computer</span>
-                          <span className="font-medium text-slate-600">
-                            {pcs.length === 0 ? "No PCs found. Start spec-detector to register PCs." : "No PCs match your filters."}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredPCs.map((pc) => {
-                      // Only show warning if NOT in maintenance
-                      const hasWarnings = (pc._count?.changes || 0) > 0 && pc.status !== 'maintenance';
-                      const lastSeenDate = new Date(pc.lastSeen);
-                      const lastSeenFormatted = lastSeenDate.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      });
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 bg-white">
+                    {pcsLoading ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-12 text-center">
+                          <div className="flex items-center justify-center gap-2 text-slate-600 font-medium">
+                            <span className="material-symbols-outlined animate-spin">sync</span>
+                            <span>Memuat data komputer...</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : filteredPCs.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-12 text-center">
+                          <div className="flex flex-col items-center justify-center gap-2 text-slate-500">
+                            <span className="material-symbols-outlined text-4xl text-slate-400">computer</span>
+                            <span className="font-medium text-slate-600">
+                              {pcs.length === 0 ? "Tidak ada komputer ditemukan. Jalankan spec-detector untuk mendaftarkan komputer." : "Tidak ada komputer yang cocok dengan filter."}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredPCs.map((pc) => {
+                        // Only show warning if NOT in maintenance
+                        const hasWarnings = (pc._count?.changes || 0) > 0 && pc.status !== 'maintenance';
+                        const lastSeenDate = new Date(pc.lastSeen);
+                        const lastSeenFormatted = lastSeenDate.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        });
 
-                      return (
-                        <tr
-                          key={pc.id}
-                          className={`hover:bg-slate-50 transition-colors ${hasWarnings ? 'bg-red-50/60' : ''} border-b border-slate-100 last:border-0`}
-                        >
-                          <td className="px-4 py-4">
-                            <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-2">
-                                <div className="text-sm font-bold text-slate-900">
-                                  {pc.hostname}
+                        return (
+                          <tr
+                            key={pc.id}
+                            className={`hover:bg-slate-50 transition-colors ${hasWarnings ? 'bg-red-50/60' : ''} border-b border-slate-100 last:border-0`}
+                          >
+                            <td className="px-4 py-4">
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-bold text-slate-900">
+                                    {pc.hostname}
+                                  </div>
+                                  {hasWarnings && (
+                                    <span className="flex items-center gap-1.5 px-2 py-0.5 bg-red-600 text-[10px] font-black text-white rounded-full shadow-md animate-pulse ring-2 ring-red-100">
+                                      <span className="material-symbols-outlined text-[14px]">error</span>
+                                      TIDAK SESUAI
+                                    </span>
+                                  )}
                                 </div>
-                                {hasWarnings && (
-                                  <span className="flex items-center gap-1.5 px-2 py-0.5 bg-red-600 text-[10px] font-black text-white rounded-full shadow-md animate-pulse ring-2 ring-red-100">
-                                    <span className="material-symbols-outlined text-[14px]">error</span>
-                                    MISMATCHED
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 flex-shrink-0 shadow-sm">
+                                  <span className="material-symbols-outlined text-[20px]">
+                                    {getOSIcon(pc.os)}
                                   </span>
+                                </div>
+                                <div className="text-sm font-semibold text-slate-900 truncate max-w-[200px]" title={pc.cpu?.model || 'CPU Tidak Diketahui'}>
+                                  {pc.cpu?.model || 'CPU Tidak Diketahui'}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex flex-col gap-1">
+                                <div className="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 inline-block w-fit">
+                                  {getRAMDisplay(pc.rams)}
+                                </div>
+                                <div className="text-xs font-medium text-slate-600">
+                                  {getStorageDisplay(pc.storages)}
+                                </div>
+                                <div className="text-[10px] text-slate-500 truncate max-w-[150px]" title={`${pc.os || 'Unknown'} ${pc.osVersion || ''}`}>
+                                  {pc.os || 'Unknown'} {pc.osVersion || ''}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="text-sm font-bold text-slate-900">
+                                {pc.location || 'Belum Ditetapkan'}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">{getStatusBadge(pc.status)}</td>
+                            <td className="px-4 py-4">
+                              <div className="text-sm font-medium text-slate-600">
+                                {lastSeenFormatted}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <Link
+                                  href={`/dashboard/pcs/${pc.id}`}
+                                  className="p-1.5 rounded-md hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
+                                  title="Lihat Detail"
+                                >
+                                  <span className="material-symbols-outlined text-[20px]">visibility</span>
+                                </Link>
+                                {user?.role === 'admin' && (
+                                  <>
+                                    <button
+                                      onClick={() => handleEditClick(pc)}
+                                      className="p-1.5 rounded-md hover:bg-amber-50 text-slate-600 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100"
+                                      title="Edit Lokasi"
+                                    >
+                                      <span className="material-symbols-outlined text-[20px]">edit_location</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteClick(pc)}
+                                      className="p-1.5 rounded-md hover:bg-red-50 text-slate-600 hover:text-red-600 transition-all border border-transparent hover:border-red-100"
+                                      title="Hapus Komputer"
+                                    >
+                                      <span className="material-symbols-outlined text-[20px]">delete</span>
+                                    </button>
+                                  </>
                                 )}
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 flex-shrink-0 shadow-sm">
-                                <span className="material-symbols-outlined text-[20px]">
-                                  {getOSIcon(pc.os)}
-                                </span>
-                              </div>
-                              <div className="text-sm font-semibold text-slate-900 truncate max-w-[200px]" title={pc.cpu?.model || 'Unknown CPU'}>
-                                {pc.cpu?.model || 'Unknown CPU'}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="flex flex-col gap-1">
-                              <div className="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 inline-block w-fit">
-                                {getRAMDisplay(pc.rams)}
-                              </div>
-                              <div className="text-xs font-medium text-slate-600">
-                                {getStorageDisplay(pc.storages)}
-                              </div>
-                              <div className="text-[10px] text-slate-500 truncate max-w-[150px]" title={`${pc.os || 'Unknown'} ${pc.osVersion || ''}`}>
-                                {pc.os || 'Unknown'} {pc.osVersion || ''}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="text-sm font-bold text-slate-900">
-                              {pc.location || 'Unassigned'}
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">{getStatusBadge(pc.status)}</td>
-                          <td className="px-4 py-4">
-                            <div className="text-sm font-medium text-slate-600">
-                              {lastSeenFormatted}
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <Link
-                                href={`/dashboard/pcs/${pc.id}`}
-                                className="p-1.5 rounded-md hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
-                                title="View Details"
-                              >
-                                <span className="material-symbols-outlined text-[20px]">visibility</span>
-                              </Link>
-                              <button
-                                onClick={() => handleEditClick(pc)}
-                                className="p-1.5 rounded-md hover:bg-amber-50 text-slate-600 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100"
-                                title="Edit Location"
-                              >
-                                <span className="material-symbols-outlined text-[20px]">edit_location</span>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteClick(pc)}
-                                className="p-1.5 rounded-md hover:bg-red-50 text-slate-600 hover:text-red-600 transition-all border border-transparent hover:border-red-100"
-                                title="Delete PC"
-                              >
-                                <span className="material-symbols-outlined text-[20px]">delete</span>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        ) : (
-          // Grid View
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {pcsLoading ? (
-              <div className="col-span-full flex items-center justify-center py-20">
-                <div className="flex items-center gap-2 text-slate-600 font-medium">
-                  <span className="material-symbols-outlined animate-spin">sync</span>
-                  <span>Loading PCs...</span>
+          ) : (
+            // Grid View
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {pcsLoading ? (
+                <div className="col-span-full flex items-center justify-center py-20">
+                  <div className="flex items-center gap-2 text-slate-600 font-medium">
+                    <span className="material-symbols-outlined animate-spin">sync</span>
+                    <span>Memuat data komputer...</span>
+                  </div>
                 </div>
-              </div>
-            ) : filteredPCs.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-500">
-                <span className="material-symbols-outlined text-6xl text-slate-400 mb-4">computer</span>
-                <span className="font-medium text-slate-600">
-                  {pcs.length === 0 ? "No PCs found. Start spec-detector to register PCs." : "No PCs match your filters."}
-                </span>
-              </div>
-            ) : (
-              filteredPCs.map((pc) => {
-                // Only show warning if NOT in maintenance
-                const hasWarnings = (pc._count?.changes || 0) > 0 && pc.status !== 'maintenance';
-                const lastSeenDate = new Date(pc.lastSeen);
-                const lastSeenFormatted = lastSeenDate.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                });
+              ) : filteredPCs.length === 0 ? (
+                <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-500">
+                  <span className="material-symbols-outlined text-6xl text-slate-400 mb-4">computer</span>
+                  <span className="font-medium text-slate-600">
+                    {pcs.length === 0 ? "Tidak ada komputer ditemukan. Jalankan spec-detector untuk mendaftarkan komputer." : "Tidak ada komputer yang cocok dengan filter."}
+                  </span>
+                </div>
+              ) : (
+                filteredPCs.map((pc) => {
+                  // Only show warning if NOT in maintenance
+                  const hasWarnings = (pc._count?.changes || 0) > 0 && pc.status !== 'maintenance';
+                  const lastSeenDate = new Date(pc.lastSeen);
+                  const lastSeenFormatted = lastSeenDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                  });
 
-                return (
-                  <div
-                    key={pc.id}
-                    className={`bg-white rounded-xl border-2 shadow-sm hover:shadow-md transition-all overflow-hidden group ${hasWarnings ? 'border-red-200 bg-red-50/30' : 'border-slate-200'
-                      }`}
-                  >
-                    <div className="p-5">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-base font-bold text-slate-900 truncate" title={pc.hostname}>
-                              {pc.hostname}
-                            </h3>
-                            {hasWarnings && (
-                              <span className="flex items-center gap-1 px-1.5 py-0.5 bg-red-600 text-[8px] font-black text-white rounded-full shadow-md animate-pulse ring-2 ring-red-100 flex-shrink-0">
-                                <span className="material-symbols-outlined text-[12px]">error</span>
-                                MISMATCHED
-                              </span>
+                  return (
+                    <div
+                      key={pc.id}
+                      className={`bg-white rounded-xl border-2 shadow-sm hover:shadow-md transition-all overflow-hidden group ${hasWarnings ? 'border-red-200 bg-red-50/30' : 'border-slate-200'
+                        }`}
+                    >
+                      <div className="p-5">
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-base font-bold text-slate-900 truncate" title={pc.hostname}>
+                                {pc.hostname}
+                              </h3>
+                              {hasWarnings && (
+                                <span className="flex items-center gap-1 px-1.5 py-0.5 bg-red-600 text-[8px] font-black text-white rounded-full shadow-md animate-pulse ring-2 ring-red-100 flex-shrink-0">
+                                  <span className="material-symbols-outlined text-[12px]">error</span>
+                                  TIDAK SESUAI
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {pc.brand || 'Brand Tidak Diketahui'}
+                            </p>
+                          </div>
+                          <div className="ml-2">{getStatusBadge(pc.status)}</div>
+                        </div>
+
+                        {/* OS Icon and CPU */}
+                        <div className="flex items-center gap-3 mb-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                          <div className="h-12 w-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 flex-shrink-0">
+                            <span className="material-symbols-outlined text-[24px]">
+                              {getOSIcon(pc.os)}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-slate-900 truncate" title={pc.cpu?.model}>
+                              {pc.cpu?.model || 'CPU Tidak Diketahui'}
+                            </div>
+                            <div className="text-xs text-slate-500 truncate">
+                              {pc.cpu?.cores || 0} Cores
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Specs */}
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500 font-medium">RAM:</span>
+                            <span className="font-bold text-slate-900 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">
+                              {getRAMDisplay(pc.rams)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500 font-medium">Penyimpanan:</span>
+                            <span className="font-semibold text-slate-700 truncate ml-2" title={getStorageDisplay(pc.storages)}>
+                              {getStorageDisplay(pc.storages)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500 font-medium">Lokasi:</span>
+                            <span className="font-bold text-slate-900">
+                              {pc.location || 'Belum Ditetapkan'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                          <div className="flex items-center gap-1 text-xs text-slate-500">
+                            <span className="material-symbols-outlined text-[14px]">schedule</span>
+                            <span>{lastSeenFormatted}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Link
+                              href={`/dashboard/pcs/${pc.id}`}
+                              className="p-2 rounded-md hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition-all"
+                              title="Lihat Detail"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">visibility</span>
+                            </Link>
+                            {user?.role === 'admin' && (
+                              <>
+                                <button
+                                  onClick={() => handleEditClick(pc)}
+                                  className="p-2 rounded-md hover:bg-amber-50 text-slate-600 hover:text-amber-600 transition-all"
+                                  title="Edit Lokasi"
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">edit_location</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteClick(pc)}
+                                  className="p-2 rounded-md hover:bg-red-50 text-slate-600 hover:text-red-600 transition-all"
+                                  title="Hapus Komputer"
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                                </button>
+                              </>
                             )}
                           </div>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            {pc.brand || 'Unknown Brand'}
-                          </p>
-                        </div>
-                        <div className="ml-2">{getStatusBadge(pc.status)}</div>
-                      </div>
-
-                      {/* OS Icon and CPU */}
-                      <div className="flex items-center gap-3 mb-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <div className="h-12 w-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 flex-shrink-0">
-                          <span className="material-symbols-outlined text-[24px]">
-                            {getOSIcon(pc.os)}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-slate-900 truncate" title={pc.cpu?.model}>
-                            {pc.cpu?.model || 'Unknown CPU'}
-                          </div>
-                          <div className="text-xs text-slate-500 truncate">
-                            {pc.cpu?.cores || 0} Cores
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Specs */}
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500 font-medium">RAM:</span>
-                          <span className="font-bold text-slate-900 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">
-                            {getRAMDisplay(pc.rams)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500 font-medium">Storage:</span>
-                          <span className="font-semibold text-slate-700 truncate ml-2" title={getStorageDisplay(pc.storages)}>
-                            {getStorageDisplay(pc.storages)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500 font-medium">Location:</span>
-                          <span className="font-bold text-slate-900">
-                            {pc.location || 'Unassigned'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Footer */}
-                      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                        <div className="flex items-center gap-1 text-xs text-slate-500">
-                          <span className="material-symbols-outlined text-[14px]">schedule</span>
-                          <span>{lastSeenFormatted}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Link
-                            href={`/dashboard/pcs/${pc.id}`}
-                            className="p-2 rounded-md hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition-all"
-                            title="View Details"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">visibility</span>
-                          </Link>
-                          <button
-                            onClick={() => handleEditClick(pc)}
-                            className="p-2 rounded-md hover:bg-amber-50 text-slate-600 hover:text-amber-600 transition-all"
-                            title="Edit Location"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">edit_location</span>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(pc)}
-                            className="p-2 rounded-md hover:bg-red-50 text-slate-600 hover:text-red-600 transition-all"
-                            title="Delete PC"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">delete</span>
-                          </button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        )}
-      </div>
+                  );
+                })
+              )}
+            </div>
+          )}
 
-      {/* Delete Confirmation Modal */}
-      {deleteConfirmModal && pcToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h3 className="font-bold text-lg text-slate-900">Confirm Delete</h3>
-            </div>
-            <div className="p-6">
-              <p className="text-slate-700">
-                Are you sure you want to delete <span className="font-bold">{pcToDelete.hostname}</span>?
-                This action cannot be undone.
-              </p>
-            </div>
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
-              <button
-                onClick={handleDeleteCancel}
-                disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50"
-              >
-                {deleting ? 'Deleting...' : 'Delete PC'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Edit Location Modal */}
-      {showEditModal && pcToEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-              <h3 className="font-bold text-lg text-slate-900">Edit PC Location</h3>
-              <button onClick={handleEditCancel} className="text-slate-400 hover:text-slate-600">
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <div className="text-sm font-semibold text-slate-900">{pcToEdit.hostname}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{pcToEdit.brand || 'Unknown Brand'}</div>
+          {/* Pagination and Results Count - Below Table */}
+          {!pcsLoading && filteredPCs.length > 0 && (
+            <div className="flex items-center justify-between bg-white rounded-lg border border-slate-200 shadow-sm px-4 py-3">
+              <span className="text-sm text-slate-600">
+                Menampilkan <span className="font-bold text-slate-900">{filteredPCs.length}</span> dari <span className="font-bold text-slate-900">{pcs.length}</span> Komputer
+              </span>
+              <div className="flex items-center gap-1">
+                <button className="px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors">
+                  <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                </button>
+                <button className="px-3 py-1.5 text-sm font-bold text-white bg-blue-600 rounded-md">1</button>
+                {filteredPCs.length > 10 && (
+                  <>
+                    <button className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-md transition-colors">2</button>
+                    <button className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-md transition-colors">3</button>
+                  </>
+                )}
+                <button className="px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors">
+                  <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Assign to Lab
-                </label>
-                <select
-                  value={editLocation}
-                  onChange={(e) => setEditLocation(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                >
-                  <option value="">-- Unassigned --</option>
-                  {labs.map(lab => (
-                    <option key={lab.id} value={lab.name}>{lab.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-slate-500 mt-2">Select the physical lab/location for this device.</p>
-              </div>
+            </div>
+          )}
 
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Operational Status
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setEditStatus("active")}
-                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${editStatus === "active" ? "bg-emerald-50 border-emerald-500 text-emerald-700" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">check_circle</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Active</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditStatus("maintenance")}
-                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${editStatus === "maintenance" ? "bg-amber-50 border-amber-500 text-amber-700" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">build</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Service</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditStatus("offline")}
-                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${editStatus === "offline" ? "bg-slate-50 border-slate-400 text-slate-700" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">block</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Offline</span>
-                  </button>
+          {/* Delete Confirmation Modal */}
+          {deleteConfirmModal && pcToDelete && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-200">
+                  <h3 className="font-bold text-lg text-slate-900">Konfirmasi Hapus</h3>
                 </div>
-                <p className="text-xs text-slate-500 mt-3 italic">Manual status change will persist until the next automated check.</p>
-              </div>
-
-              {/* Component Editing Section */}
-              <div className="mt-6 border-t border-slate-100 pt-6">
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">settings</span>
-                  Hardware Baseline (For Mismatch Detection)
-                </h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1">Target CPU Model</label>
-                    <input
-                      type="text"
-                      value={editCPU}
-                      onChange={e => setEditCPU(e.target.value)}
-                      placeholder="e.g. Intel Core i5-12400"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500/20 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1">Target RAM Capacity</label>
-                    <input
-                      type="text"
-                      value={editRAM}
-                      onChange={e => setEditRAM(e.target.value)}
-                      placeholder="e.g. 16GB"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-purple-500/20 outline-none"
-                    />
-                  </div>
-                </div>
-                <div className="mt-4 p-3 bg-blue-50/50 rounded-lg border border-blue-100 flex gap-3">
-                  <span className="material-symbols-outlined text-blue-600 text-[18px]">info</span>
-                  <p className="text-[10px] text-blue-700 leading-relaxed font-medium">
-                    Changing these values will define what is "Correct". If the actual PC sends different data, it will trigger a <strong className="text-red-600">MISMATCHED</strong> alert, unless status is set to <strong className="text-amber-600">Service/Maintenance</strong>.
+                <div className="p-6">
+                  <p className="text-slate-700">
+                    Apakah Anda yakin ingin menghapus <span className="font-bold">{pcToDelete.hostname}</span>?
+                    Tindakan ini tidak dapat dibatalkan.
                   </p>
                 </div>
+                <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+                  <button
+                    onClick={handleDeleteCancel}
+                    disabled={deleting}
+                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleDeleteConfirm}
+                    disabled={deleting}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50"
+                  >
+                    {deleting ? 'Menghapus...' : 'Hapus Komputer'}
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
-              <button
-                onClick={handleEditCancel}
-                disabled={updating}
-                className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditConfirm}
-                disabled={updating}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50"
-              >
-                {updating ? 'Updating...' : 'Update Location'}
-              </button>
+          )}
+          {/* Edit Location Modal */}
+          {showEditModal && pcToEdit && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                  <h3 className="font-bold text-lg text-slate-900">Edit Lokasi Komputer</h3>
+                  <button onClick={handleEditCancel} className="text-slate-400 hover:text-slate-600">
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+                <div className="p-6">
+                  <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="text-sm font-semibold text-slate-900">{pcToEdit.hostname}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{pcToEdit.brand || 'Brand Tidak Diketahui'}</div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Tetapkan ke Lab
+                    </label>
+                    <select
+                      value={editLocation}
+                      onChange={(e) => setEditLocation(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    >
+                      <option value="">-- Belum Ditetapkan --</option>
+                      {labs.map(lab => (
+                        <option key={lab.id} value={lab.name}>{lab.name}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-slate-500 mt-2">Pilih lab/lokasi fisik untuk perangkat ini.</p>
+                  </div>
+
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Status Operasional
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setEditStatus("active")}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${editStatus === "active" ? "bg-emerald-50 border-emerald-500 text-emerald-700" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
+                      >
+                        <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Aktif</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditStatus("maintenance")}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${editStatus === "maintenance" ? "bg-amber-50 border-amber-500 text-amber-700" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
+                      >
+                        <span className="material-symbols-outlined text-[20px]">build</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Servis</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditStatus("offline")}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${editStatus === "offline" ? "bg-slate-50 border-slate-400 text-slate-700" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
+                      >
+                        <span className="material-symbols-outlined text-[20px]">block</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Offline</span>
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-3 italic">Perubahan status manual akan bertahan sampai pemeriksaan otomatis berikutnya.</p>
+                  </div>
+
+                  {/* Component Editing Section */}
+                  <div className="mt-6 border-t border-slate-100 pt-6">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">settings</span>
+                      Baseline Hardware (Untuk Deteksi Ketidaksesuaian)
+                    </h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1">Target Model CPU</label>
+                        <input
+                          type="text"
+                          value={editCPU}
+                          onChange={e => setEditCPU(e.target.value)}
+                          placeholder="e.g. Intel Core i5-12400"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500/20 outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1">Target Kapasitas RAM</label>
+                        <input
+                          type="text"
+                          value={editRAM}
+                          onChange={e => setEditRAM(e.target.value)}
+                          placeholder="e.g. 16GB"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-purple-500/20 outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-blue-50/50 rounded-lg border border-blue-100 flex gap-3">
+                      <span className="material-symbols-outlined text-blue-600 text-[18px]">info</span>
+                      <p className="text-[10px] text-blue-700 leading-relaxed font-medium">
+                        Mengubah nilai ini akan menentukan apa yang dianggap "Benar". Jika PC mengirim data berbeda, akan memicu peringatan <strong className="text-red-600">TIDAK SESUAI</strong>, kecuali status diatur ke <strong className="text-amber-600">Servis/Perbaikan</strong>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+                  <button
+                    onClick={handleEditCancel}
+                    disabled={updating}
+                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleEditConfirm}
+                    disabled={updating}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50"
+                  >
+                    {updating ? 'Memperbarui...' : 'Perbarui Lokasi'}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </>
+        }
+      </div>
     </div>
   );
 }

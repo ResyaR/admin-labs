@@ -1,300 +1,554 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface User {
     id: string;
     username: string;
-    name: string | null;
     email: string | null;
+    name: string | null;
     role: string;
     createdAt: string;
 }
 
 export default function UsersPage() {
-    const router = useRouter();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
 
-    // Form State
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [role, setRole] = useState("user");
-    const [formError, setFormError] = useState("");
-    const [submitting, setSubmitting] = useState(false);
+    // Modal States
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    // Create States
+    const [newUsername, setNewUsername] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [newName, setNewName] = useState("");
+    const [newEmail, setNewEmail] = useState("");
+    const [newRole, setNewRole] = useState("guru");
+
+    // Edit States
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [editName, setEditName] = useState("");
+    const [editEmail, setEditEmail] = useState("");
+    const [editRole, setEditRole] = useState("");
+    const [editPassword, setEditPassword] = useState("");
+
+    // Delete State
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
     useEffect(() => {
         fetchUsers();
     }, []);
 
-    const fetchUsers = async () => {
+    async function fetchUsers() {
+        setLoading(true);
         try {
-            const response = await fetch('/api/users');
-            if (response.status === 401) {
-                // Not authorized, redirect or show error (sidebar link should be hidden anyway)
-                router.push('/dashboard');
-                return;
+            const res = await fetch("/api/users");
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
+                    setUsers(data.data);
+                }
             }
-            const data = await response.json();
-            if (data.success) {
-                setUsers(data.data);
-            }
-        } catch (error) {
-            console.error('Failed to fetch users:', error);
+        } catch (e) {
+            console.error(e);
         } finally {
             setLoading(false);
         }
-    };
+    }
 
-    const handleCreateUser = async (e: React.FormEvent) => {
+    async function createUser(e: React.FormEvent) {
         e.preventDefault();
-        setFormError("");
-        setSubmitting(true);
+        if (!newUsername || !newPassword) return;
+
+        setError("");
+        setActionLoading(true);
 
         try {
-            const response = await fetch('/api/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, name, email, role })
+            const payload = {
+                username: newUsername,
+                password: newPassword,
+                name: newName,
+                email: newEmail,
+                role: newRole
+            };
+
+            const res = await fetch("/api/users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
             });
-            const data = await response.json();
-            if (data.success) {
-                setIsModalOpen(false);
-                resetForm();
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                setNewUsername("");
+                setNewPassword("");
+                setNewName("");
+                setNewEmail("");
+                setNewRole("guru");
+                setShowCreateModal(false);
                 fetchUsers();
             } else {
-                setFormError(data.error || 'Failed to create user');
+                setError(data.error || "Gagal membuat pengguna");
             }
-        } catch (error) {
-            setFormError('An unexpected error occurred');
+        } catch (e) {
+            console.error(e);
+            setError("Terjadi kesalahan sistem");
         } finally {
-            setSubmitting(false);
+            setActionLoading(false);
         }
-    };
+    }
 
-    const handleDeleteUser = async (id: string, userRole: string) => {
-        if (userRole === 'admin') {
-            alert("Cannot delete admin users.");
-            return;
-        }
-        if (!confirm("Are you sure you want to delete this user?")) return;
+    async function updateUser(e: React.FormEvent) {
+        e.preventDefault();
+        if (!editingUser) return;
+
+        setError("");
+        setActionLoading(true);
 
         try {
-            const response = await fetch(`/api/users?id=${id}`, {
-                method: 'DELETE'
+            const payload: any = {
+                id: editingUser.id,
+                name: editName,
+                email: editEmail,
+                role: editRole,
+            };
+
+            if (editPassword) {
+                payload.password = editPassword;
+            }
+
+            const res = await fetch("/api/users", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
             });
-            const data = await response.json();
-            if (data.success) {
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                setEditingUser(null);
+                setEditName("");
+                setEditEmail("");
+                setEditRole("");
+                setEditPassword("");
+                setShowEditModal(false);
                 fetchUsers();
             } else {
-                alert(data.error || 'Failed to delete user');
+                setError(data.error || "Gagal memperbarui pengguna");
             }
-        } catch (error) {
-            console.error('Delete failed:', error);
+        } catch (e) {
+            console.error(e);
+            setError("Terjadi kesalahan sistem");
+        } finally {
+            setActionLoading(false);
         }
+    }
+
+    async function deleteUser() {
+        if (!userToDelete) return;
+        setActionLoading(true);
+        try {
+            const res = await fetch(`/api/users?id=${userToDelete.id}`, { method: "DELETE" });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                setShowDeleteModal(false);
+                setUserToDelete(null);
+                fetchUsers();
+            } else {
+                alert(data.error || "Gagal menghapus pengguna");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Terjadi kesalahan sistem");
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
+    const openEditModal = (user: User) => {
+        setEditingUser(user);
+        setEditName(user.name || "");
+        setEditEmail(user.email || "");
+        setEditRole(user.role);
+        setEditPassword("");
+        setShowEditModal(true);
     };
 
-    const resetForm = () => {
-        setUsername("");
-        setPassword("");
-        setName("");
-        setEmail("");
-        setRole("user");
-        setFormError("");
-    }
+    const openDeleteModal = (user: User) => {
+        setUserToDelete(user);
+        setShowDeleteModal(true);
+    };
 
-    if (loading) {
-        return <div className="p-8 text-slate-500">Loading users...</div>;
-    }
+    // Filtered users based on search
+    const filteredUsers = users.filter(user => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        return (
+            (user.name && user.name.toLowerCase().includes(query)) ||
+            user.username.toLowerCase().includes(query) ||
+            (user.email && user.email.toLowerCase().includes(query))
+        );
+    });
+
+    const getRoleBadge = (role: string) => {
+        switch (role) {
+            case 'admin':
+                return <span className="px-2.5 py-1 bg-violet-100 text-violet-700 text-[10px] font-bold uppercase rounded-lg border border-violet-200 tracking-wide">Administrator</span>;
+            case 'guru':
+                return <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase rounded-lg border border-emerald-200 tracking-wide">Guru</span>;
+            default:
+                return <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase rounded-lg border border-slate-200 tracking-wide">{role}</span>;
+        }
+    };
 
     return (
-        <div className="p-8">
-            <div className="max-w-6xl mx-auto flex flex-col gap-8">
+        <div className="p-4 pt-2">
+            <div className="w-full mx-auto flex flex-col gap-4">
+                {/* Breadcrumb */}
+                <div className="flex items-center gap-2 text-sm">
+                    <Link href="/dashboard" className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
+                        <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                        Dashboard
+                    </Link>
+                    <span className="material-symbols-outlined text-[16px] text-slate-400">chevron_right</span>
+                    <span className="font-bold text-slate-900">Akses Pengguna</span>
+                </div>
+
+                {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-                            Users & Access
+                            Manajemen Pengguna
                         </h2>
-                        <p className="text-sm text-slate-500 mt-1">
-                            Manage system access and user roles.
+                        <p className="text-sm text-slate-600 mt-1">
+                            Kelola akses dan peran pengguna aplikasi. Termasuk Admin dan Guru.
                         </p>
                     </div>
                     <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm transition-colors flex items-center gap-2"
+                        onClick={() => setShowCreateModal(true)}
+                        className="flex items-center justify-center gap-2 h-10 px-4 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium shadow-sm transition-colors"
                     >
                         <span className="material-symbols-outlined text-[18px]">person_add</span>
-                        Create New User
+                        Tambah Pengguna
                     </button>
                 </div>
 
-                <div className="bg-white rounded-lg border border-slate-200 shadow-card overflow-hidden">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                <th className="px-6 py-3">User</th>
-                                <th className="px-6 py-3">Role</th>
-                                <th className="px-6 py-3">Email</th>
-                                <th className="px-6 py-3">Created</th>
-                                <th className="px-6 py-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-sm">
-                            {users.map((user) => (
-                                <tr key={user.id} className="hover:bg-slate-50 transition-colors group">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="size-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold text-xs">
-                                                {user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <div className="font-medium text-slate-900">{user.username}</div>
-                                                <div className="text-xs text-slate-500">{user.name}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${user.role === 'admin'
-                                                ? 'bg-purple-100 text-purple-700'
-                                                : 'bg-slate-100 text-slate-700'
-                                            }`}>
-                                            {user.role}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-slate-600">
-                                        {user.email || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 text-slate-500 font-mono text-xs">
-                                        {new Date(user.createdAt).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        {user.role !== 'admin' && (
-                                            <button
-                                                onClick={() => handleDeleteUser(user.id, user.role)}
-                                                className="text-slate-400 hover:text-red-600 transition-colors p-1"
-                                                title="Remove User"
-                                            >
-                                                <span className="material-symbols-outlined text-[20px]">delete</span>
-                                            </button>
-                                        )}
-                                        {user.role === 'admin' && (
-                                            <span className="text-slate-300 text-xs italic">Protected</span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                            {users.length === 0 && (
+                {/* Search Bar */}
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm px-4 py-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="relative flex items-center h-9 flex-1 min-w-[200px] max-w-xs rounded-md bg-white border border-slate-300 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+                            <div className="flex items-center justify-center pl-3 pr-2">
+                                <span className="material-symbols-outlined text-slate-400 text-[16px]">
+                                    search
+                                </span>
+                            </div>
+                            <input
+                                className="w-full h-full bg-transparent border-none text-sm text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-none"
+                                placeholder="Cari nama, username, atau email..."
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Table */}
+                <div className="bg-white rounded-xl border border-slate-300 shadow-md overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-slate-100 border-b border-slate-300">
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500 italic">No users found.</td>
+                                    <th className="px-5 py-3 text-xs font-extrabold text-slate-800 uppercase tracking-wider">PENGGUNA</th>
+                                    <th className="px-4 py-3 text-xs font-extrabold text-slate-800 uppercase tracking-wider">ROLE</th>
+                                    <th className="px-4 py-3 text-xs font-extrabold text-slate-800 uppercase tracking-wider">EMAIL</th>
+                                    <th className="px-4 py-3 text-xs font-extrabold text-slate-800 uppercase tracking-wider">TANGGAL DIBUAT</th>
+                                    <th className="px-4 py-3 text-right text-xs font-extrabold text-slate-800 uppercase tracking-wider">AKSI</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 bg-white">
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-12 text-center">
+                                            <div className="flex items-center justify-center gap-2 text-slate-600 font-medium">
+                                                <span className="material-symbols-outlined animate-spin">sync</span>
+                                                <span>Memuat pengguna...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : filteredUsers.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                                            Tidak ada pengguna ditemukan.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredUsers.map(user => (
+                                        <tr key={user.id} className="hover:bg-slate-50 transition">
+                                            <td className="px-5 py-4">
+                                                <div>
+                                                    <p className="font-bold text-slate-900">{user.name || user.username}</p>
+                                                    <p className="text-xs text-slate-500 font-mono">@{user.username}</p>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                {getRoleBadge(user.role)}
+                                            </td>
+                                            <td className="px-4 py-4 text-sm text-slate-700">{user.email || '-'}</td>
+                                            <td className="px-4 py-4 text-sm text-slate-700">{new Date(user.createdAt).toLocaleDateString('id-ID')}</td>
+                                            <td className="px-4 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => openEditModal(user)}
+                                                        className="p-1.5 rounded-md hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
+                                                        title="Edit"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[20px]">edit</span>
+                                                    </button>
+                                                    {user.role !== 'admin' && (
+                                                        <button
+                                                            onClick={() => openDeleteModal(user)}
+                                                            className="p-1.5 rounded-md hover:bg-red-50 text-slate-600 hover:text-red-600 transition-all border border-transparent hover:border-red-100"
+                                                            title="Hapus"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[20px]">delete</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            {/* Modal Overlay */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-bold text-slate-900">Create New User</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+            {/* Create Modal */}
+            {showCreateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                            <h3 className="font-bold text-lg text-slate-900">Tambah Pengguna Baru</h3>
+                            <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-slate-600">
                                 <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
-
-                        {formError && (
-                            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-md border border-red-100 flex items-start gap-2">
-                                <span className="material-symbols-outlined text-[18px] mt-0.5">error</span>
-                                {formError}
-                            </div>
-                        )}
-
-                        <form onSubmit={handleCreateUser} className="space-y-4">
+                        <form onSubmit={createUser} className="p-6 flex flex-col gap-4">
+                            {error && (
+                                <div className="p-3 bg-red-50 text-red-700 text-sm border border-red-200 rounded-lg">
+                                    {error}
+                                </div>
+                            )}
                             <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">Username *</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Username <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                                    placeholder="jdoe"
                                     required
+                                    value={newUsername}
+                                    onChange={(e) => setNewUsername(e.target.value)}
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    placeholder="Username login"
                                 />
                             </div>
-
                             <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">Passsword *</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Password <span className="text-red-500">*</span></label>
                                 <input
                                     type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                                    placeholder="••••••••"
                                     required
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    placeholder="Password login"
                                 />
                             </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                                    placeholder="John Doe"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
+                                    <input
+                                        type="text"
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                        placeholder="Nama pengguna"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Role / Peran</label>
+                                    <select
+                                        value={newRole}
+                                        onChange={(e) => setNewRole(e.target.value)}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    >
+                                        <option value="guru">Guru</option>
+                                        <option value="admin">Administrator</option>
+                                    </select>
+                                </div>
                             </div>
-
                             <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Email (Opsional)</label>
                                 <input
                                     type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                                    placeholder="john@example.com"
+                                    value={newEmail}
+                                    onChange={(e) => setNewEmail(e.target.value)}
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    placeholder="email@sekolah.sch.id"
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">Role</label>
-                                <select
-                                    value={role}
-                                    onChange={(e) => setRole(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                                >
-                                    <option value="user">User (Read Only)</option>
-                                    <option value="admin">Admin (Full Access)</option>
-                                </select>
-                                <p className="text-[10px] text-slate-500 mt-1">
-                                    Admins have full access to managing PCs and Users.
-                                </p>
-                            </div>
-
-                            <div className="pt-2 flex gap-3">
+                            <div className="flex justify-end gap-3 mt-4 pt-2 border-t border-slate-100">
                                 <button
                                     type="button"
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 font-medium text-sm transition-colors"
+                                    onClick={() => setShowCreateModal(false)}
+                                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md transition-colors"
                                 >
-                                    Cancel
+                                    Batal
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={submitting}
-                                    className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 font-medium text-sm transition-colors flex justify-center items-center gap-2"
+                                    disabled={actionLoading}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors disabled:opacity-50"
                                 >
-                                    {submitting && <span className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>}
-                                    Create User
+                                    {actionLoading ? 'Menyimpan...' : 'Simpan Pengguna'}
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {showEditModal && editingUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                            <h3 className="font-bold text-lg text-slate-900">Edit Pengguna</h3>
+                            <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <form onSubmit={updateUser} className="p-6 flex flex-col gap-4">
+                            {error && (
+                                <div className="p-3 bg-red-50 text-red-700 text-sm border border-red-200 rounded-lg">
+                                    {error}
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                                <input
+                                    type="text"
+                                    disabled
+                                    value={editingUser.username}
+                                    className="w-full px-3 py-2 border border-slate-200 bg-slate-100 text-slate-500 rounded-md cursor-not-allowed"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
+                                    <input
+                                        type="text"
+                                        value={editName}
+                                        onChange={(e) => setEditName(e.target.value)}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Role / Peran</label>
+                                    <select
+                                        value={editRole}
+                                        onChange={(e) => setEditRole(e.target.value)}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    >
+                                        <option value="guru">Guru</option>
+                                        <option value="admin">Administrator</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    value={editEmail}
+                                    onChange={(e) => setEditEmail(e.target.value)}
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                />
+                            </div>
+
+                            <div className="pt-2 border-t border-slate-100 mt-2">
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Ganti Password (Opsional)</label>
+                                <input
+                                    type="password"
+                                    value={editPassword}
+                                    onChange={(e) => setEditPassword(e.target.value)}
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    placeholder="Isi hanya jika ingin mengubah password"
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-3 mt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditModal(false)}
+                                    className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={actionLoading}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors disabled:opacity-50"
+                                >
+                                    {actionLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && userToDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="px-6 py-4 border-b border-slate-200 bg-red-50">
+                            <h3 className="font-bold text-lg text-red-900 flex items-center gap-2">
+                                <span className="material-symbols-outlined">warning</span>
+                                Konfirmasi Hapus
+                            </h3>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-slate-700">
+                                Apakah Anda yakin ingin menghapus pengguna <span className="font-bold">{userToDelete.name || userToDelete.username}</span>?
+                            </p>
+                            <p className="text-sm text-red-600 mt-2">
+                                Tindakan ini tidak dapat dibatalkan. Pengguna tidak akan bisa login lagi.
+                            </p>
+                        </div>
+                        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                disabled={actionLoading}
+                                className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={deleteUser}
+                                disabled={actionLoading}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50 shadow-sm"
+                            >
+                                {actionLoading ? 'Menghapus...' : 'Ya, Hapus Pengguna'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

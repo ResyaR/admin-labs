@@ -10,7 +10,11 @@ export async function GET() {
     }
 
     try {
+        // Admin sees all credentials, Guru sees only their own
+        const whereClause = user.role === 'admin' ? {} : { createdBy: user.username };
+
         const creds = await prisma.appCredential.findMany({
+            where: whereClause,
             orderBy: { createdAt: "desc" },
         });
         return NextResponse.json(creds);

@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
                 password: hashedPassword,
                 name: name || null,
                 email: email || null,
-                role: role || 'user',
+                role: role || 'guru',
             },
             select: {
                 id: true,
@@ -79,6 +79,51 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true, user: newUser })
     } catch (error) {
         console.error('Create user error:', error)
+        return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
+    }
+}
+
+
+export async function PATCH(request: NextRequest) {
+    try {
+        const currentUser = await getCurrentUser()
+        if (!currentUser || currentUser.role !== 'admin') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        const body = await request.json()
+        const { id, name, email, role, password } = body
+
+        if (!id) {
+            return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 })
+        }
+
+        const updateData: any = {
+            name: name || null,
+            email: email || null,
+            role: role,
+        }
+
+        if (password) {
+            updateData.password = await hashPassword(password)
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: updateData,
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                name: true,
+                role: true,
+                createdAt: true,
+            }
+        })
+
+        return NextResponse.json({ success: true, user: updatedUser })
+    } catch (error) {
+        console.error('Update user error:', error)
         return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
     }
 }

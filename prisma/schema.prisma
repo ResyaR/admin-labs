@@ -19,6 +19,8 @@ model User {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   sessions  Session[]
+  teachingSessions TeachingSession[]
+  issueReports     IssueReport[]
 
   @@map("users")
 }
@@ -199,5 +201,58 @@ model Lab {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  teachingSessions TeachingSession[]
+  issueReports     IssueReport[]
+
   @@map("labs")
+}
+
+// Riwayat Sesi Mengajar Guru
+model TeachingSession {
+  id          String    @id @default(cuid())
+  userId      String
+  labId       String
+  labName     String    // Denormalized for quick access
+  startedAt   DateTime  @default(now())
+  scheduledEndTime DateTime? // Waktu berakhir yang dijadwalkan
+  endedAt     DateTime?
+  duration    Int?      // Duration in minutes, calculated on end
+  notes       String?   // Optional notes from teacher
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lab  Lab  @relation(fields: [labId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([labId])
+  @@index([startedAt])
+  @@map("teaching_sessions")
+}
+
+// Laporan Masalah PC dari Guru
+model IssueReport {
+  id          String   @id @default(cuid())
+  reporterId  String   // User who reported
+  labId       String
+  pcId        String?  // Optional: specific PC with issue
+  pcHostname  String?  // Denormalized for display
+  category    String   // hardware, software, network, other
+  priority    String   @default("medium") // low, medium, high, critical
+  title       String
+  description String
+  status      String   @default("open") // open, in_progress, resolved, closed
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  resolution  String?  // Resolution notes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  lab      Lab  @relation(fields: [labId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([labId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("issue_reports")
 }

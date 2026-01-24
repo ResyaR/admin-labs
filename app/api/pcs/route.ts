@@ -56,8 +56,11 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/pcs - Mengambil daftar semua PC (optimized for list view)
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const labId = searchParams.get('labId')
+
     // Passive Cleanup: Mark active PCs as offline if they haven't synced for 24 hours
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
     await prisma.pC.updateMany({
@@ -70,7 +73,22 @@ export async function GET() {
       },
     })
 
+    let whereClause: any = {}
+
+    if (labId) {
+      const lab = await prisma.lab.findUnique({
+        where: { id: labId }
+      })
+
+      if (lab) {
+        whereClause.location = lab.name
+      } else {
+        return NextResponse.json({ success: true, data: [] }, { headers: corsHeaders })
+      }
+    }
+
     const pcs = await prisma.pC.findMany({
+      where: whereClause,
       select: {
         id: true,
         hostname: true,
@@ -278,19 +296,40 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
     }
   }
 
-  // 3. Check Motherboard
+  // 3. Check Motherboard (Model + Serial Number)
   if (newSpec.motherboard && existingPC.motherboard) {
-    if (existingPC.motherboard.model !== newSpec.motherboard) {
+    const modelMismatch = existingPC.motherboard.model !== newSpec.motherboard;
+    const serialMismatch = existingPC.motherboard.serialNumber &&
+      newSpec.motherboardSerial &&
+      existingPC.motherboard.serialNumber !== newSpec.motherboardSerial;
+
+    if (modelMismatch || serialMismatch) {
       const existingWarning = await prisma.componentChange.findFirst({
         where: { pcId: existingPC.id, componentType: 'motherboard', severity: 'warning' },
         orderBy: { createdAt: 'desc' }
       })
-      if (!existingWarning || existingWarning.newValue !== newSpec.motherboard) {
+
+      let message = '';
+      let newValue = '';
+
+      if (modelMismatch && serialMismatch) {
+        message = `🔴 CRITICAL: Motherboard diganti! Model: "${newSpec.motherboard}" (was "${existingPC.motherboard.model}"), SN: "${newSpec.motherboardSerial}" (was "${existingPC.motherboard.serialNumber}")`;
+        newValue = `${newSpec.motherboard}|${newSpec.motherboardSerial}`;
+      } else if (serialMismatch) {
+        message = `🔴 CRITICAL: Motherboard SN berubah! "${newSpec.motherboardSerial}" vs Baseline "${existingPC.motherboard.serialNumber}"`;
+        newValue = newSpec.motherboardSerial || '';
+      } else {
+        message = `Hardware Mismatch: Actual Board ("${newSpec.motherboard}") vs Baseline ("${existingPC.motherboard.model}")`;
+        newValue = newSpec.motherboard;
+      }
+
+      if (!existingWarning || existingWarning.newValue !== newValue) {
         changes.push({
           pcId: existingPC.id, componentType: 'motherboard', changeType: 'modified',
-          oldValue: existingPC.motherboard.model, newValue: newSpec.motherboard,
-          message: `Hardware Mismatch: Actual Board ("${newSpec.motherboard}") vs Baseline ("${existingPC.motherboard.model}")`,
-          severity: 'warning',
+          oldValue: `${existingPC.motherboard.model}|${existingPC.motherboard.serialNumber || 'N/A'}`,
+          newValue: newValue,
+          message: message,
+          severity: serialMismatch ? 'critical' : 'warning',
         })
       }
     } else {
@@ -300,27 +339,109 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
     }
   }
 
-  // 4. Check RAM
+  // 4. Check ALL RAM slots (Capacity + Serial Number)
   if (newSpec.ramDetails && newSpec.ramDetails.length > 0 && existingPC.rams.length > 0) {
-    const baselineRAM = existingPC.rams[0].capacity;
-    const actualRAM = newSpec.ramDetails[0].capacity;
+    let ramMismatches: string[] = [];
 
-    if (baselineRAM !== actualRAM) {
+    for (const actualRAM of newSpec.ramDetails) {
+      // Find matching baseline RAM by slotIndex or by order
+      const baselineRAM = existingPC.rams.find(r => r.slotIndex === actualRAM.slotIndex)
+        || existingPC.rams[newSpec.ramDetails.indexOf(actualRAM)];
+
+      if (!baselineRAM) continue;
+
+      const capacityMismatch = baselineRAM.capacity !== actualRAM.capacity;
+      const serialMismatch = baselineRAM.serialNumber &&
+        actualRAM.serialNumber &&
+        baselineRAM.serialNumber !== actualRAM.serialNumber;
+
+      if (capacityMismatch || serialMismatch) {
+        const slot = actualRAM.slotIndex !== undefined ? `Slot ${actualRAM.slotIndex}` : `RAM ${newSpec.ramDetails.indexOf(actualRAM) + 1}`;
+        if (serialMismatch) {
+          ramMismatches.push(`${slot}: SN "${actualRAM.serialNumber}" (was "${baselineRAM.serialNumber}")`);
+        } else {
+          ramMismatches.push(`${slot}: "${actualRAM.capacity}" (was "${baselineRAM.capacity}")`);
+        }
+      }
+    }
+
+    if (ramMismatches.length > 0) {
       const existingWarning = await prisma.componentChange.findFirst({
         where: { pcId: existingPC.id, componentType: 'ram', severity: 'warning' },
         orderBy: { createdAt: 'desc' }
       })
-      if (!existingWarning || existingWarning.newValue !== actualRAM) {
+
+      const message = `RAM Mismatch: ${ramMismatches.join('; ')}`;
+      const newValue = ramMismatches.join('|');
+
+      if (!existingWarning || existingWarning.newValue !== newValue) {
         changes.push({
           pcId: existingPC.id, componentType: 'ram', changeType: 'modified',
-          oldValue: baselineRAM, newValue: actualRAM,
-          message: `Hardware Mismatch: Actual RAM ("${actualRAM}") vs Baseline ("${baselineRAM}")`,
+          oldValue: existingPC.rams.map(r => `${r.capacity}|${r.serialNumber || 'N/A'}`).join('; '),
+          newValue: newValue,
+          message: message,
           severity: 'warning',
         })
       }
     } else {
       await prisma.componentChange.deleteMany({
         where: { pcId: existingPC.id, componentType: 'ram', severity: 'warning' }
+      })
+    }
+  }
+
+  // 5. Check ALL Storage devices (Model + Serial Number) - CRITICAL
+  if (newSpec.storageDetails && newSpec.storageDetails.length > 0 && existingPC.storages.length > 0) {
+    let storageMismatches: string[] = [];
+    let hasCritical = false;
+
+    for (const actualStorage of newSpec.storageDetails) {
+      // Find matching baseline storage by diskIndex or by order
+      const baselineStorage = existingPC.storages.find(s => s.diskIndex === actualStorage.diskIndex)
+        || existingPC.storages[newSpec.storageDetails.indexOf(actualStorage)];
+
+      if (!baselineStorage) continue;
+
+      const modelMismatch = baselineStorage.model && actualStorage.model &&
+        baselineStorage.model !== actualStorage.model;
+      const serialMismatch = baselineStorage.serialNumber &&
+        actualStorage.serialNumber &&
+        baselineStorage.serialNumber !== actualStorage.serialNumber;
+
+      if (modelMismatch || serialMismatch) {
+        const disk = actualStorage.diskIndex !== undefined ? `Disk ${actualStorage.diskIndex}` : `Storage ${newSpec.storageDetails.indexOf(actualStorage) + 1}`;
+        if (serialMismatch) {
+          storageMismatches.push(`🔴 ${disk}: SN "${actualStorage.serialNumber}" (was "${baselineStorage.serialNumber}")`);
+          hasCritical = true;
+        } else {
+          storageMismatches.push(`${disk}: "${actualStorage.model}" (was "${baselineStorage.model}")`);
+        }
+      }
+    }
+
+    if (storageMismatches.length > 0) {
+      const existingWarning = await prisma.componentChange.findFirst({
+        where: { pcId: existingPC.id, componentType: 'storage', severity: 'warning' },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      const message = hasCritical
+        ? `🔴 CRITICAL Storage Change: ${storageMismatches.join('; ')}`
+        : `Storage Mismatch: ${storageMismatches.join('; ')}`;
+      const newValue = storageMismatches.join('|');
+
+      if (!existingWarning || existingWarning.newValue !== newValue) {
+        changes.push({
+          pcId: existingPC.id, componentType: 'storage', changeType: 'modified',
+          oldValue: existingPC.storages.map(s => `${s.model}|${s.serialNumber || 'N/A'}`).join('; '),
+          newValue: newValue,
+          message: message,
+          severity: hasCritical ? 'critical' : 'warning',
+        })
+      }
+    } else {
+      await prisma.componentChange.deleteMany({
+        where: { pcId: existingPC.id, componentType: 'storage', severity: 'warning' }
       })
     }
   }

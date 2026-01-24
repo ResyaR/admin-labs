@@ -13,15 +13,37 @@ export async function GET() {
             orderBy: { createdAt: 'desc' },
         });
 
-        // Count PCs for each lab
-        const labsWithCount = await Promise.all(labs.map(async (lab: any) => {
+        // Count PCs and active teachers for each lab
+        const labsWithData = await Promise.all(labs.map(async (lab: any) => {
             const pcCount = await prisma.pC.count({
                 where: { location: lab.name }
             });
-            return { ...lab, pcCount };
+
+            // Get active teaching sessions for this lab
+            const activeSessions = await prisma.teachingSession.findMany({
+                where: {
+                    labId: lab.id,
+                    endedAt: null
+                },
+                include: {
+                    user: { select: { id: true, name: true, username: true } }
+                }
+            });
+
+            return {
+                ...lab,
+                pcCount,
+                activeTeachersCount: activeSessions.length,
+                activeTeachers: activeSessions.map(s => ({
+                    id: s.user?.id,
+                    name: s.user?.name || s.user?.username,
+                    startedAt: s.startedAt,
+                    scheduledEndTime: s.scheduledEndTime
+                }))
+            };
         }));
 
-        return NextResponse.json({ success: true, data: labsWithCount });
+        return NextResponse.json({ success: true, data: labsWithData });
     } catch (error) {
         console.error('Error fetching labs:', error);
         return NextResponse.json({ error: 'Failed to fetch labs' }, { status: 500 });

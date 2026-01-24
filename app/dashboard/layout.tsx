@@ -20,9 +20,9 @@ export default function DashboardLayout({
 }) {
     const router = useRouter();
     const pathname = usePathname();
-    const [searchQuery, setSearchQuery] = useState("");
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     useEffect(() => {
         // Basic accessibility setup
@@ -59,6 +59,11 @@ export default function DashboardLayout({
 
     const handleLogout = async () => {
         try {
+            // Clear localStorage data from Guru session
+            localStorage.removeItem('activeLabId');
+            localStorage.removeItem('activeLabName');
+            localStorage.removeItem('scheduledEndTime');
+
             const response = await fetch('/api/auth/logout', {
                 method: 'POST',
                 credentials: 'include'
@@ -83,7 +88,7 @@ export default function DashboardLayout({
     return (
         <div className="font-sans bg-slate-50 text-slate-900 h-screen flex overflow-hidden selection:bg-primary-100 selection:text-primary-700">
             {/* Sidebar */}
-            <aside className="w-72 bg-slate-950 border-r border-white/5 flex flex-col flex-shrink-0 z-30 shadow-2xl relative">
+            <aside className={`${sidebarCollapsed ? 'w-0 opacity-0 invisible' : 'w-72 opacity-100 visible'} bg-slate-950 border-r border-white/5 flex flex-col flex-shrink-0 z-30 shadow-2xl relative transition-all duration-300 ease-in-out overflow-hidden`}>
                 <div className="h-20 flex items-center px-6 border-b border-white/5 bg-slate-950">
                     <div className="flex items-center gap-3 group">
                         <div
@@ -94,10 +99,10 @@ export default function DashboardLayout({
                         ></div>
                         <div className="flex flex-col">
                             <h1 className="text-sm font-display font-semibold tracking-wider text-white uppercase">
-                                Admin Labs
+                                {user?.role === 'admin' ? 'Admin Lab' : 'Panel Guru'}
                             </h1>
                             <p className="text-slate-500 text-[9px] font-mono tracking-[0.2em] opacity-60">
-                                FLEET MANAGEMENT
+                                {user?.role === 'admin' ? 'MANAJEMEN PERANGKAT' : 'MONITORING LAB'}
                             </p>
                         </div>
                     </div>
@@ -105,73 +110,83 @@ export default function DashboardLayout({
                 <div className="p-5 flex flex-col gap-8 overflow-y-auto flex-1 custom-scrollbar">
                     <nav className="flex flex-col gap-1.5">
                         <div className="px-4 mb-3 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
-                            Framework
+                            Menu Utama
                         </div>
                         <Link href="/dashboard" className={linkClass('/dashboard')}>
                             <span className={iconClass('/dashboard')}>dashboard</span>
-                            <span className="text-sm font-medium tracking-tight">Analytics Overview</span>
+                            <span className="text-sm font-medium tracking-tight">Ringkasan Analitik</span>
                         </Link>
                         <Link href="/dashboard/pcs" className={linkClass('/dashboard/pcs')}>
                             <span className={iconClass('/dashboard/pcs')}>computer</span>
-                            <span className="text-sm font-medium tracking-tight">Machine Fleet</span>
+                            <span className="text-sm font-medium tracking-tight">Daftar Komputer</span>
                         </Link>
-                    </nav>
-                    <nav className="flex flex-col gap-1.5">
-                        <div className="px-4 mb-3 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
-                            Control Center
-                        </div>
-                        {user?.role === 'admin' && (
+                        {user?.role === 'guru' && (
                             <>
-                                <Link href="/dashboard/labs" className={linkClass('/dashboard/labs')}>
-                                    <span className={iconClass('/dashboard/labs')}>meeting_room</span>
-                                    <span className="text-sm font-medium tracking-tight">Room Assets</span>
+                                <Link href="/dashboard/sessions" className={linkClass('/dashboard/sessions')}>
+                                    <span className={iconClass('/dashboard/sessions')}>history</span>
+                                    <span className="text-sm font-medium tracking-tight">Riwayat Sesi</span>
                                 </Link>
-                                <Link href="/dashboard/users" className={linkClass('/dashboard/users')}>
-                                    <span className={iconClass('/dashboard/users')}>manage_accounts</span>
-                                    <span className="text-sm font-medium tracking-tight">Security & Users</span>
+                                <Link href="/dashboard/issues" className={linkClass('/dashboard/issues')}>
+                                    <span className={iconClass('/dashboard/issues')}>report</span>
+                                    <span className="text-sm font-medium tracking-tight">Laporan Masalah</span>
                                 </Link>
                             </>
                         )}
+                    </nav>
+                    <nav className="flex flex-col gap-1.5">
+                        <div className="px-4 mb-3 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+                            Pusat Kontrol
+                        </div>
+
+                        {user?.role === 'admin' && (
+                            <Link href="/dashboard/labs" className={linkClass('/dashboard/labs')}>
+                                <span className={iconClass('/dashboard/labs')}>meeting_room</span>
+                                <span className="text-sm font-medium tracking-tight">Manajemen Lab</span>
+                            </Link>
+                        )}
+
+                        {user?.role === 'admin' && (
+                            <Link href="/dashboard/users" className={linkClass('/dashboard/users')}>
+                                <span className={iconClass('/dashboard/users')}>manage_accounts</span>
+                                <span className="text-sm font-medium tracking-tight">Akses Pengguna</span>
+                            </Link>
+                        )}
+                        {user?.role === 'admin' && (
+                            <Link href="/dashboard/issues" className={linkClass('/dashboard/issues')}>
+                                <span className={iconClass('/dashboard/issues')}>report</span>
+                                <span className="text-sm font-medium tracking-tight">Laporan Masalah</span>
+                            </Link>
+                        )}
+                        {user?.role === 'admin' && (
+                            <Link href="/dashboard/sessions" className={linkClass('/dashboard/sessions')}>
+                                <span className={iconClass('/dashboard/sessions')}>history</span>
+                                <span className="text-sm font-medium tracking-tight">Riwayat Sesi Guru</span>
+                            </Link>
+                        )}
                         <Link href="/dashboard/credentials" className={linkClass('/dashboard/credentials')}>
                             <span className={iconClass('/dashboard/credentials')}>key</span>
-                            <span className="text-sm font-medium tracking-tight">Protocol Keys</span>
+                            <span className="text-sm font-medium tracking-tight">Kunci Kredensial</span>
                         </Link>
                     </nav>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-slate-50">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-slate-50 transition-all duration-300">
                 {/* Header */}
-                <header className="h-16 flex items-center justify-between px-8 border-b border-slate-200 bg-white z-20">
+                <header className="h-14 flex items-center justify-between px-6 border-b border-slate-200 bg-white z-20">
                     <div className="flex items-center gap-4">
-                        <button className="md:hidden text-slate-500 dark:text-slate-300">
-                            <span className="material-symbols-outlined">menu</span>
-                        </button>
-                        <nav className="hidden sm:flex items-center text-sm font-medium text-slate-500 dark:text-slate-400">
-                            <span className="hover:text-slate-800 dark:hover:text-white cursor-pointer">
-                                Admin
+                        <button
+                            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                            className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                            title={sidebarCollapsed ? "Tampilkan Sidebar" : "Sembunyikan Sidebar"}
+                        >
+                            <span className="material-symbols-outlined text-[22px]">
+                                {sidebarCollapsed ? 'menu_open' : 'menu'}
                             </span>
-                            <span className="mx-2 text-slate-300">/</span>
-                            <span className="text-slate-800">Dashboard</span>
-                        </nav>
+                        </button>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="relative hidden md:block">
-                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span className="material-symbols-outlined text-slate-400 text-[18px]">
-                                    search
-                                </span>
-                            </span>
-                            <input
-                                className="block w-64 pl-9 pr-3 py-1.5 border border-slate-300 rounded-md leading-5 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-all shadow-sm"
-                                placeholder="Search machine ID..."
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
                         <button className="relative p-2 rounded-lg hover:bg-slate-100 text-slate-800 hover:text-slate-900 transition-colors">
                             <span className="material-symbols-outlined text-[24px] font-medium">notifications</span>
                             <span className="absolute top-1.5 right-1.5 size-2.5 bg-red-500 rounded-full ring-2 ring-white shadow-sm"></span>
@@ -179,7 +194,7 @@ export default function DashboardLayout({
                         {/* User Profile */}
                         <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                             <div className="relative">
-                                <div className="size-10 rounded-full bg-gradient-to-br from-primary-600 to-primary-700 flex items-center justify-center text-white font-bold text-base shadow-md ring-2 ring-primary-100">
+                                <div className="size-10 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-md ring-2 ring-indigo-100">
                                     {loading ? (
                                         <span className="material-symbols-outlined text-[20px] animate-spin font-medium">sync</span>
                                     ) : user ? (
@@ -191,11 +206,11 @@ export default function DashboardLayout({
                                 <div className="absolute bottom-0 right-0 size-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
                             </div>
                             <div className="flex flex-col hidden lg:block">
-                                <p className="text-sm font-semibold text-slate-900">
-                                    {loading ? 'Loading...' : user?.name || user?.username || 'User'}
+                                <p className="text-sm font-semibold text-slate-900 leading-tight">
+                                    {loading ? 'Memuat...' : user?.name || user?.username || 'Pengguna'}
                                 </p>
-                                <p className="text-xs text-slate-600 capitalize font-medium mt-0.5">
-                                    {loading ? '' : user?.role || 'Admin'}
+                                <p className="text-[11px] text-slate-500">
+                                    {user?.role === 'admin' ? 'Administrator' : 'Guru'}
                                 </p>
                             </div>
                             <button
