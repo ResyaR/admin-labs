@@ -345,7 +345,7 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
 
     for (const actualRAM of newSpec.ramDetails) {
       // Find matching baseline RAM by slotIndex or by order
-      const baselineRAM = existingPC.rams.find(r => r.slotIndex === actualRAM.slotIndex)
+      const baselineRAM = existingPC.rams.find((r: any) => r.slotIndex === actualRAM.slotIndex)
         || existingPC.rams[newSpec.ramDetails.indexOf(actualRAM)];
 
       if (!baselineRAM) continue;
@@ -377,7 +377,7 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
       if (!existingWarning || existingWarning.newValue !== newValue) {
         changes.push({
           pcId: existingPC.id, componentType: 'ram', changeType: 'modified',
-          oldValue: existingPC.rams.map(r => `${r.capacity}|${r.serialNumber || 'N/A'}`).join('; '),
+          oldValue: existingPC.rams.map((r: any) => `${r.capacity}|${r.serialNumber || 'N/A'}`).join('; '),
           newValue: newValue,
           message: message,
           severity: 'warning',
@@ -397,7 +397,7 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
 
     for (const actualStorage of newSpec.storageDetails) {
       // Find matching baseline storage by diskIndex or by order
-      const baselineStorage = existingPC.storages.find(s => s.diskIndex === actualStorage.diskIndex)
+      const baselineStorage = existingPC.storages.find((s: any) => s.diskIndex === actualStorage.diskIndex)
         || existingPC.storages[newSpec.storageDetails.indexOf(actualStorage)];
 
       if (!baselineStorage) continue;
@@ -433,7 +433,7 @@ async function updateExistingPC(existingPC: any, newSpec: any) {
       if (!existingWarning || existingWarning.newValue !== newValue) {
         changes.push({
           pcId: existingPC.id, componentType: 'storage', changeType: 'modified',
-          oldValue: existingPC.storages.map(s => `${s.model}|${s.serialNumber || 'N/A'}`).join('; '),
+          oldValue: existingPC.storages.map((s: any) => `${s.model}|${s.serialNumber || 'N/A'}`).join('; '),
           newValue: newValue,
           message: message,
           severity: hasCritical ? 'critical' : 'warning',
