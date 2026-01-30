@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 interface User {
@@ -23,6 +23,21 @@ export default function DashboardLayout({
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowProfileDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     useEffect(() => {
         // Basic accessibility setup
@@ -81,7 +96,12 @@ export default function DashboardLayout({
     };
 
     // Helper untuk active class
-    const isActive = (path: string) => pathname === path;
+    const isActive = (path: string) => {
+        if (path === '/dashboard') {
+            return pathname === path; // Exact match untuk dashboard
+        }
+        return pathname === path || pathname.startsWith(path + '/'); // startsWith untuk subpages
+    };
     const linkClass = (path: string) => `flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 group ${isActive(path) ? 'bg-brand text-white shadow-[0_8px_20px_rgba(99,102,241,0.25)]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`;
     const iconClass = (path: string) => `material-symbols-outlined text-[20px] ${isActive(path) ? 'font-light' : 'group-hover:text-brand transition-colors font-light'}`;
 
@@ -191,35 +211,67 @@ export default function DashboardLayout({
                             <span className="material-symbols-outlined text-[24px] font-medium">notifications</span>
                             <span className="absolute top-1.5 right-1.5 size-2.5 bg-red-500 rounded-full ring-2 ring-white shadow-sm"></span>
                         </button>
-                        {/* User Profile */}
-                        <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-                            <div className="relative">
-                                <div className="size-10 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-md ring-2 ring-indigo-100">
-                                    {loading ? (
-                                        <span className="material-symbols-outlined text-[20px] animate-spin font-medium">sync</span>
-                                    ) : user ? (
-                                        user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()
-                                    ) : (
-                                        'U'
-                                    )}
-                                </div>
-                                <div className="absolute bottom-0 right-0 size-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
-                            </div>
-                            <div className="flex flex-col hidden lg:block">
-                                <p className="text-sm font-semibold text-slate-900 leading-tight">
-                                    {loading ? 'Memuat...' : user?.name || user?.username || 'Pengguna'}
-                                </p>
-                                <p className="text-[11px] text-slate-500">
-                                    {user?.role === 'admin' ? 'Administrator' : 'Guru'}
-                                </p>
-                            </div>
+                        {/* User Profile with Dropdown */}
+                        <div className="flex items-center gap-3 pl-4 border-l border-slate-200 relative" ref={dropdownRef}>
                             <button
-                                onClick={handleLogout}
-                                className="p-2 rounded-lg hover:bg-red-50 text-slate-800 hover:text-red-600 transition-all border border-transparent hover:border-red-200"
-                                title="Logout"
+                                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                                className="flex items-center gap-3 hover:bg-slate-50 p-2 -m-2 rounded-lg transition-colors"
                             >
-                                <span className="material-symbols-outlined text-[24px] font-medium">logout</span>
+                                <div className="relative">
+                                    <div className="size-10 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-md ring-2 ring-indigo-100">
+                                        {loading ? (
+                                            <span className="material-symbols-outlined text-[20px] animate-spin font-medium">sync</span>
+                                        ) : user ? (
+                                            user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()
+                                        ) : (
+                                            'U'
+                                        )}
+                                    </div>
+                                    <div className="absolute bottom-0 right-0 size-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
+                                </div>
+                                <div className="flex flex-col hidden lg:block text-left">
+                                    <p className="text-sm font-semibold text-slate-900 leading-tight">
+                                        {loading ? 'Memuat...' : user?.name || user?.username || 'Pengguna'}
+                                    </p>
+                                    <p className="text-[11px] text-slate-500">
+                                        {user?.role === 'admin' ? 'Administrator' : 'Guru'}
+                                    </p>
+                                </div>
+                                <span className="material-symbols-outlined text-slate-400 text-[20px] hidden lg:block">
+                                    {showProfileDropdown ? 'expand_less' : 'expand_more'}
+                                </span>
                             </button>
+
+                            {/* Dropdown Menu */}
+                            {showProfileDropdown && (
+                                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="px-4 py-3 border-b border-slate-100">
+                                        <p className="text-sm font-semibold text-slate-900">
+                                            {user?.name || user?.username || 'Pengguna'}
+                                        </p>
+                                        <p className="text-xs text-slate-500">{user?.email || 'Tidak ada email'}</p>
+                                        <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-medium rounded-full uppercase tracking-wide">
+                                            <span className="material-symbols-outlined text-[12px]">verified_user</span>
+                                            {user?.role === 'admin' ? 'Administrator' : 'Guru'}
+                                        </span>
+                                    </div>
+                                    <div className="py-1">
+                                        <button
+                                            onClick={() => {
+                                                setShowProfileDropdown(false);
+                                                setShowLogoutModal(true);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-red-600 hover:bg-red-50 transition-colors group"
+                                        >
+                                            <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">logout</span>
+                                            <div>
+                                                <p className="text-sm font-medium">Keluar</p>
+                                                <p className="text-[11px] text-red-400">Akhiri sesi Anda</p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </header>
@@ -229,6 +281,41 @@ export default function DashboardLayout({
                     {children}
                 </main>
             </div>
+
+            {/* Logout Confirmation Modal */}
+            {showLogoutModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-6 text-center">
+                            <div className="size-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                                <span className="material-symbols-outlined text-red-600 text-[32px]">logout</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">Konfirmasi Keluar</h3>
+                            <p className="text-slate-600 text-sm">
+                                Apakah Anda yakin ingin keluar dari sistem? Anda harus login kembali untuk mengakses dashboard.
+                            </p>
+                        </div>
+                        <div className="px-6 pb-6 flex gap-3">
+                            <button
+                                onClick={() => setShowLogoutModal(false)}
+                                className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowLogoutModal(false);
+                                    handleLogout();
+                                }}
+                                className="flex-1 px-4 py-3 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">logout</span>
+                                Ya, Keluar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

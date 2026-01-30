@@ -256,7 +256,7 @@ export default function AllPCsPage() {
       "CPU",
       "RAM",
       "Storage",
-      "Last Seen"
+      "Terakhir Sinkronisasi"
     ];
 
     const csvRows = filteredPCs.map(pc => [
@@ -525,7 +525,7 @@ export default function AllPCsPage() {
                       <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[180px]" scope="col">SPESIFIKASI</th>
                       <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[120px]" scope="col">LOKASI</th>
                       <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[100px]" scope="col">STATUS</th>
-                      <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[120px]" scope="col">TERAKHIR AKTIF</th>
+                      <th className="px-4 py-3 text-left text-xs font-extrabold text-slate-800 uppercase tracking-wider min-w-[120px]" scope="col">TERAKHIR SINKRONISASI</th>
                       <th className="w-16 px-4 py-3 text-center" scope="col">
                         <span className="sr-only">Aksi</span>
                       </th>
