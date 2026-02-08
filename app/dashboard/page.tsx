@@ -1,5 +1,6 @@
 "use client";
 import { apiUrl } from "@/lib/paths";
+import { getPath } from "@/lib/navigation";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -602,7 +603,7 @@ export default function DashboardPage() {
               {userRole === 'admin' && (
                 <div className="flex items-center gap-4">
                   <Link
-                    href="/dashboard/pcs"
+                    href={getPath("/dashboard/pcs")}
                     className="group flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-indigo-500/25 transition-all duration-300 hover:shadow-indigo-500/40 hover:scale-[1.02]"
                   >
                     <span className="material-symbols-outlined text-xl">devices</span>
@@ -718,7 +719,7 @@ export default function DashboardPage() {
                   {pcs.map((pc) => (
                     <Link
                       key={pc.id}
-                      href={`/dashboard/pcs/${pc.id}`}
+                      href={getPath(`/dashboard/pcs/${pc.id}`)}
                       className="p-5 rounded-2xl border border-slate-200 hover:border-emerald-500 hover:shadow-lg transition-all bg-slate-50/30 group"
                     >
                       <div className="flex items-start justify-between mb-4">

@@ -292,7 +292,7 @@ export default function LabDetailPage() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <Link
-                                                    href={`/dashboard/pcs/${pc.id}`}
+                                                    href={getPath(`/dashboard/pcs/${pc.id}`)}
                                                     className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
                                                     title="Lihat Detail PC"
                                                 >
