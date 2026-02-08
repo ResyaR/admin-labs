@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/paths";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -65,7 +66,7 @@ export default function IssueReportsPage() {
 
     const fetchUser = async () => {
         try {
-            const response = await fetch('/api/auth/me');
+            const response = await fetch(apiUrl('/api/auth/me'));
             const data = await response.json();
             if (data.success) {
                 setUserRole(data.user.role);
@@ -78,8 +79,8 @@ export default function IssueReportsPage() {
     const fetchReports = async () => {
         try {
             const url = statusFilter === 'all'
-                ? '/api/issues'
-                : `/api/issues?status=${statusFilter}`;
+                ? apiUrl('/api/issues')
+                : apiUrl(`/api/issues?status=${statusFilter}`);
             const response = await fetch(url);
             const data = await response.json();
             if (data.success) {
@@ -97,7 +98,7 @@ export default function IssueReportsPage() {
         try {
             const labId = localStorage.getItem('activeLabId');
             if (labId) {
-                const response = await fetch(`/api/pcs?labId=${labId}`);
+                const response = await fetch(apiUrl(`/api/pcs?labId=${labId}`));
                 const data = await response.json();
                 if (data.success) {
                     setPcs(data.data);
@@ -122,7 +123,7 @@ export default function IssueReportsPage() {
 
             const selectedPC = pcs.find(pc => pc.id === formData.pcId);
 
-            const response = await fetch('/api/issues', {
+            const response = await fetch(apiUrl('/api/issues'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -218,7 +219,7 @@ export default function IssueReportsPage() {
     const handleStatusChange = async (reportId: string, newStatus: string) => {
         setUpdatingId(reportId);
         try {
-            const response = await fetch('/api/issues', {
+            const response = await fetch(apiUrl('/api/issues'), {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: reportId, status: newStatus })

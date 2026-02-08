@@ -1,5 +1,6 @@
 
 "use client";
+import { apiUrl, assetUrl } from "@/lib/paths";
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
@@ -55,7 +56,7 @@ export default function DashboardLayout({
 
     const fetchUser = async () => {
         try {
-            const response = await fetch('/api/auth/me');
+            const response = await fetch(apiUrl('/api/auth/me'));
             if (!response.ok) {
                 router.push('/');
                 return;
@@ -79,7 +80,7 @@ export default function DashboardLayout({
             localStorage.removeItem('activeLabName');
             localStorage.removeItem('scheduledEndTime');
 
-            const response = await fetch('/api/auth/logout', {
+            const response = await fetch(apiUrl('/api/auth/logout'), {
                 method: 'POST',
                 credentials: 'include'
             });
@@ -114,7 +115,7 @@ export default function DashboardLayout({
                         <div
                             className="bg-center bg-no-repeat bg-contain rounded-xl size-10 shadow-lg p-2 bg-white/5 border border-white/10 group-hover:scale-105 transition-transform duration-500"
                             style={{
-                                backgroundImage: 'url("/logo.png")',
+                                backgroundImage: `url("${assetUrl('/logo.png')}")`,
                             }}
                         ></div>
                         <div className="flex flex-col">

@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/paths";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -48,7 +49,7 @@ export default function UsersPage() {
     async function fetchUsers() {
         setLoading(true);
         try {
-            const res = await fetch("/api/users");
+            const res = await fetch(apiUrl("/api/users"));
             if (res.ok) {
                 const data = await res.json();
                 if (data.success) {
@@ -78,7 +79,7 @@ export default function UsersPage() {
                 role: newRole
             };
 
-            const res = await fetch("/api/users", {
+            const res = await fetch(apiUrl("/api/users"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -124,7 +125,7 @@ export default function UsersPage() {
                 payload.password = editPassword;
             }
 
-            const res = await fetch("/api/users", {
+            const res = await fetch(apiUrl("/api/users"), {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -155,7 +156,7 @@ export default function UsersPage() {
         if (!userToDelete) return;
         setActionLoading(true);
         try {
-            const res = await fetch(`/api/users?id=${userToDelete.id}`, { method: "DELETE" });
+            const res = await fetch(apiUrl(`/api/users?id=${userToDelete.id}`), { method: "DELETE" });
             const data = await res.json();
 
             if (res.ok && data.success) {

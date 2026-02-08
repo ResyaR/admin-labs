@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/paths";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -101,7 +102,7 @@ export default function AllPCsPage() {
 
   const fetchUser = async () => {
     try {
-      const response = await fetch('/api/auth/me');
+      const response = await fetch(apiUrl('/api/auth/me'));
       if (!response.ok) {
         router.push('/');
         return;
@@ -121,7 +122,7 @@ export default function AllPCsPage() {
   const fetchPCs = async (labId?: string | null) => {
     try {
       setPcsLoading(true);
-      const url = labId ? `/api/pcs?labId=${labId}` : '/api/pcs';
+      const url = labId ? apiUrl(`/api/pcs?labId=${labId}`) : apiUrl('/api/pcs');
       const response = await fetch(url);
       if (!response.ok) {
         console.error('Failed to fetch PCs');
@@ -147,7 +148,7 @@ export default function AllPCsPage() {
     if (!pcToDelete) return;
     try {
       setDeleting(true);
-      const response = await fetch(`/api/pcs/${pcToDelete.id}`, {
+      const response = await fetch(apiUrl(`/api/pcs/${pcToDelete.id}`), {
         method: 'DELETE',
       });
       if (!response.ok) {
@@ -177,7 +178,7 @@ export default function AllPCsPage() {
 
   const fetchLabs = async () => {
     try {
-      const response = await fetch('/api/labs');
+      const response = await fetch(apiUrl('/api/labs'));
       const data = await response.json();
       if (data.success) {
         setLabs(data.data || []);
@@ -200,7 +201,7 @@ export default function AllPCsPage() {
     if (!pcToEdit) return;
     try {
       setUpdating(true);
-      const response = await fetch(`/api/pcs/${pcToEdit.id}`, {
+      const response = await fetch(apiUrl(`/api/pcs/${pcToEdit.id}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

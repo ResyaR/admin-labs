@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/paths";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -99,7 +100,7 @@ export default function DashboardPage() {
 
   const fetchUser = async () => {
     try {
-      const response = await fetch('/api/auth/me');
+      const response = await fetch(apiUrl('/api/auth/me'));
       const data = await response.json();
       if (data.success) {
         setUserRole(data.user.role);
@@ -137,7 +138,7 @@ export default function DashboardPage() {
 
   const fetchLabs = async () => {
     try {
-      const response = await fetch('/api/labs');
+      const response = await fetch(apiUrl('/api/labs'));
       const data = await response.json();
       if (data.success) {
         setLabs(data.data);
@@ -149,7 +150,7 @@ export default function DashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/stats');
+      const response = await fetch(apiUrl('/api/stats'));
       const data = await response.json();
       if (data.success) {
         setStats(data.data);
@@ -163,7 +164,7 @@ export default function DashboardPage() {
 
   const fetchFilteredStats = async (labId: string) => {
     try {
-      const response = await fetch(`/api/stats?labId=${labId}`);
+      const response = await fetch(apiUrl(`/api/stats?labId=${labId}`));
       const data = await response.json();
       if (data.success) {
         setStats(data.data);
@@ -178,7 +179,7 @@ export default function DashboardPage() {
   const fetchPCs = async (labId: string) => {
     try {
       setPcsLoading(true);
-      const response = await fetch(`/api/pcs?labId=${labId}`);
+      const response = await fetch(apiUrl(`/api/pcs?labId=${labId}`));
       const data = await response.json();
       if (data.success) {
         setPcs(data.data);
@@ -203,7 +204,7 @@ export default function DashboardPage() {
 
     // Fetch lab status
     try {
-      const response = await fetch(`/api/labs/status?labId=${lab.id}`);
+      const response = await fetch(apiUrl(`/api/labs/status?labId=${lab.id}`));
       const data = await response.json();
       if (data.success) {
         setLabStatus(data.data);
@@ -230,7 +231,7 @@ export default function DashboardPage() {
     setSessionError('');
 
     try {
-      const response = await fetch('/api/teaching-sessions', {
+      const response = await fetch(apiUrl('/api/teaching-sessions'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -264,7 +265,7 @@ export default function DashboardPage() {
   const handleEndSession = async () => {
     // End teaching session
     try {
-      await fetch('/api/teaching-sessions', {
+      await fetch(apiUrl('/api/teaching-sessions'), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})

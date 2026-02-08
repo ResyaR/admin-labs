@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiUrl, assetUrl } from "@/lib/paths";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -61,7 +62,7 @@ export default function LoginPage() {
           {/* Top Logo */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 p-2">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+              <img src={assetUrl("/logo.png")} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-white font-semibold text-lg tracking-tight">Admin Lab</span>
           </div>
@@ -84,7 +85,7 @@ export default function LoginPage() {
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 mb-10">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 shadow-lg shadow-indigo-500/30">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+              <img src={assetUrl("/logo.png")} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-slate-900 font-bold text-xl">Admin Lab</span>
           </div>

@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/paths";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -117,7 +118,7 @@ export default function PCDetailPage() {
 
     const fetchLabs = async () => {
         try {
-            const res = await fetch('/api/labs');
+            const res = await fetch(apiUrl('/api/labs'));
             const data = await res.json();
             if (data.success) {
                 setLabs(data.data);
@@ -130,7 +131,7 @@ export default function PCDetailPage() {
     const fetchPCDetail = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/pcs/${pcId}`);
+            const response = await fetch(apiUrl(`/api/pcs/${pcId}`));
             if (!response.ok) {
                 throw new Error('Gagal memuat detail PC');
             }
@@ -166,7 +167,7 @@ export default function PCDetailPage() {
     const handleUpdateConfig = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const res = await fetch(`/api/pcs/${pcId}`, {
+            const res = await fetch(apiUrl(`/api/pcs/${pcId}`), {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(editForm)

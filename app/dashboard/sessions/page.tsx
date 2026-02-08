@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/paths";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -33,7 +34,7 @@ export default function SessionHistoryPage() {
 
     const fetchUser = async () => {
         try {
-            const response = await fetch('/api/auth/me');
+            const response = await fetch(apiUrl('/api/auth/me'));
             const data = await response.json();
             if (data.success) {
                 setUserRole(data.user.role);
@@ -45,7 +46,7 @@ export default function SessionHistoryPage() {
 
     const fetchSessions = async () => {
         try {
-            const response = await fetch('/api/teaching-sessions?limit=50');
+            const response = await fetch(apiUrl('/api/teaching-sessions?limit=50'));
             const data = await response.json();
             if (data.success) {
                 setSessions(data.data);

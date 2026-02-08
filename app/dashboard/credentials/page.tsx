@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/paths";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -43,7 +44,7 @@ export default function CredentialsPage() {
     async function fetchCreds() {
         setLoading(true);
         try {
-            const res = await fetch("/api/credentials");
+            const res = await fetch(apiUrl("/api/credentials"));
             if (res.ok) {
                 const data = await res.json();
                 setCreds(data);
@@ -66,7 +67,7 @@ export default function CredentialsPage() {
             const payload: any = { name: newName };
             if (newKey) payload.credentialKey = newKey;
 
-            const res = await fetch("/api/credentials", {
+            const res = await fetch(apiUrl("/api/credentials"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -98,7 +99,7 @@ export default function CredentialsPage() {
         setActionLoading(true);
 
         try {
-            const res = await fetch("/api/credentials", {
+            const res = await fetch(apiUrl("/api/credentials"), {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -131,7 +132,7 @@ export default function CredentialsPage() {
         if (!credToDelete) return;
         setActionLoading(true);
         try {
-            await fetch(`/api/credentials?id=${credToDelete.id}`, { method: "DELETE" });
+            await fetch(apiUrl(`/api/credentials?id=${credToDelete.id}`), { method: "DELETE" });
             setShowDeleteModal(false);
             setCredToDelete(null);
             fetchCreds();

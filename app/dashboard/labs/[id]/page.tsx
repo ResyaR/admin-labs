@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/paths";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -49,7 +50,7 @@ export default function LabDetailPage() {
 
     const fetchLab = async () => {
         try {
-            const response = await fetch(`/api/labs`);
+            const response = await fetch(apiUrl(`/api/labs`));
             const data = await response.json();
             if (data.success) {
                 const foundLab = data.data.find((l: Lab) => l.id === labId);
@@ -69,7 +70,7 @@ export default function LabDetailPage() {
     const fetchPCs = async () => {
         try {
             setPcsLoading(true);
-            const response = await fetch(`/api/pcs?labId=${labId}`);
+            const response = await fetch(apiUrl(`/api/pcs?labId=${labId}`));
             const data = await response.json();
             if (data.success) {
                 setPcs(data.data);

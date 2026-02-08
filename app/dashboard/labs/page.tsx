@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/paths";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -44,7 +45,7 @@ export default function LabsPage() {
 
     const fetchUser = async () => {
         try {
-            const response = await fetch('/api/auth/me');
+            const response = await fetch(apiUrl('/api/auth/me'));
             const data = await response.json();
             if (data.success) {
                 setUserRole(data.user.role);
@@ -56,7 +57,7 @@ export default function LabsPage() {
 
     const fetchLabs = async () => {
         try {
-            const response = await fetch('/api/labs');
+            const response = await fetch(apiUrl('/api/labs'));
             const data = await response.json();
             if (data.success) {
                 setLabs(data.data);
@@ -72,7 +73,7 @@ export default function LabsPage() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const response = await fetch('/api/labs', {
+            const response = await fetch(apiUrl('/api/labs'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ export default function LabsPage() {
         if (!confirm('Apakah Anda yakin ingin menghapus lab ini?')) return;
 
         try {
-            const response = await fetch(`/api/labs/${id}`, {
+            const response = await fetch(apiUrl(`/api/labs/${id}`), {
                 method: 'DELETE',
             });
 
