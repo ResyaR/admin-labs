@@ -1,5 +1,6 @@
 "use client";
 import { apiUrl } from "@/lib/paths";
+import { getPath } from "@/lib/navigation";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -57,7 +58,7 @@ export default function LabDetailPage() {
                 if (foundLab) {
                     setLab(foundLab);
                 } else {
-                    router.push('/dashboard/labs');
+                    router.push(getPath('/dashboard/labs'));
                 }
             }
         } catch (error) {
@@ -140,7 +141,7 @@ export default function LabDetailPage() {
                 <div className="flex flex-col items-center justify-center py-20">
                     <span className="material-symbols-outlined text-6xl text-slate-300 mb-4">sentiment_dissatisfied</span>
                     <p className="text-slate-600 font-bold text-lg">Lab tidak ditemukan</p>
-                    <Link href="/dashboard/labs" className="mt-4 text-blue-600 hover:underline">
+                    <Link href={getPath("/dashboard/labs")} className="mt-4 text-blue-600 hover:underline">
                         Kembali ke Manajemen Lab
                     </Link>
                 </div>
@@ -153,12 +154,12 @@ export default function LabDetailPage() {
             <div className="w-full mx-auto flex flex-col gap-5">
                 {/* Custom Breadcrumb / Back Link */}
                 <div className="flex items-center gap-2 text-sm">
-                    <Link href="/dashboard" className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
+                    <Link href={getPath("/dashboard")} className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
                         <span className="material-symbols-outlined text-[18px]">dashboard</span>
                         Dashboard
                     </Link>
                     <span className="material-symbols-outlined text-[16px] text-slate-400">chevron_right</span>
-                    <Link href="/dashboard/labs" className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
+                    <Link href={getPath("/dashboard/labs")} className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
                         Manajemen Lab
                     </Link>
                     <span className="material-symbols-outlined text-[16px] text-slate-400">chevron_right</span>
@@ -227,7 +228,7 @@ export default function LabDetailPage() {
                                         Silakan pergi ke halaman Manajemen PC untuk mendaftarkan perangkat ke lab ini.
                                     </p>
                                 </div>
-                                <Link href="/dashboard/pcs" className="mt-2 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-md transition-all">
+                                <Link href={getPath("/dashboard/pcs")} className="mt-2 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-md transition-all">
                                     Ke Manajemen PC
                                 </Link>
                             </div>

@@ -1,5 +1,6 @@
 "use client";
 import { apiUrl } from "@/lib/paths";
+import { getPath } from "@/lib/navigation";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -239,7 +240,7 @@ export default function PCDetailPage() {
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Perangkat Tidak Ditemukan</h3>
                 <p className="text-slate-500 max-w-md mb-8">Perangkat yang diminta tidak dapat ditemukan dalam database inventaris.</p>
-                <Link href="/dashboard/pcs" className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                <Link href={getPath("/dashboard/pcs")} className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
                     Kembali ke Daftar PC
                 </Link>
             </div>
@@ -255,7 +256,7 @@ export default function PCDetailPage() {
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div>
                             <nav className="flex items-center gap-2 text-sm text-slate-500 mb-3">
-                                <Link href="/dashboard/pcs" className="hover:text-blue-600 transition-colors">Daftar PC</Link>
+                                <Link href={getPath("/dashboard/pcs")} className="hover:text-blue-600 transition-colors">Daftar PC</Link>
                                 <span className="material-symbols-outlined text-sm">chevron_right</span>
                                 <span className="text-slate-900 font-medium">{pc.hostname}</span>
                             </nav>
