@@ -99,10 +99,13 @@ export default function DashboardLayout({
 
     // Helper untuk active class
     const isActive = (path: string) => {
+        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+        const currentPath = pathname.replace(basePath, '') || '/';
+        
         if (path === '/dashboard') {
-            return pathname === path; // Exact match untuk dashboard
+            return currentPath === path; // Exact match untuk dashboard
         }
-        return pathname === path || pathname.startsWith(path + '/'); // startsWith untuk subpages
+        return currentPath === path || currentPath.startsWith(path + '/'); // startsWith untuk subpages
     };
     const linkClass = (path: string) => `flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 group ${isActive(path) ? 'bg-brand text-white shadow-[0_8px_20px_rgba(99,102,241,0.25)]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`;
     const iconClass = (path: string) => `material-symbols-outlined text-[20px] ${isActive(path) ? 'font-light' : 'group-hover:text-brand transition-colors font-light'}`;
