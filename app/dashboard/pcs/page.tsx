@@ -624,7 +624,7 @@ export default function AllPCsPage() {
                             <td className="px-4 py-4 text-center">
                               <div className="flex items-center justify-center gap-2">
                                 <Link
-                                  href={`/dashboard/pcs/${pc.id}`}
+                                  href={getPath(`/dashboard/pcs/${pc.id}`)}
                                   className="p-1.5 rounded-md hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
                                   title="Lihat Detail"
                                 >
@@ -760,7 +760,7 @@ export default function AllPCsPage() {
                           </div>
                           <div className="flex items-center gap-1">
                             <Link
-                              href={`/dashboard/pcs/${pc.id}`}
+                              href={getPath(`/dashboard/pcs/${pc.id}`)}
                               className="p-2 rounded-md hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition-all"
                               title="Lihat Detail"
                             >
