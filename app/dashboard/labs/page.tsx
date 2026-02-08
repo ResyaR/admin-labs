@@ -1,5 +1,6 @@
 "use client";
 import { apiUrl } from "@/lib/paths";
+import { getPath } from "@/lib/navigation";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -132,7 +133,7 @@ export default function LabsPage() {
             <div className="w-full mx-auto flex flex-col gap-4">
                 {/* Breadcrumb */}
                 <div className="flex items-center gap-2 text-sm">
-                    <Link href="/dashboard" className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
+                    <Link href={getPath("/dashboard")} className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
                         <span className="material-symbols-outlined text-[18px]">dashboard</span>
                         Dashboard
                     </Link>

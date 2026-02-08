@@ -1,5 +1,6 @@
 "use client";
 import { apiUrl } from "@/lib/paths";
+import { getPath } from "@/lib/navigation";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -89,7 +90,7 @@ export default function AllPCsPage() {
         setShowToast(true);
         setPcsLoading(false);
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push(getPath('/dashboard'));
         }, 2000);
         return;
       }
@@ -104,7 +105,7 @@ export default function AllPCsPage() {
     try {
       const response = await fetch(apiUrl('/api/auth/me'));
       if (!response.ok) {
-        router.push('/');
+        router.push(getPath('/'));
         return;
       }
       const data = await response.json();
@@ -113,7 +114,7 @@ export default function AllPCsPage() {
       }
     } catch (error) {
       console.error('Failed to fetch user:', error);
-      router.push('/');
+      router.push(getPath('/'));
     } finally {
       setLoading(false);
     }
@@ -396,7 +397,7 @@ export default function AllPCsPage() {
         {!isGuruWithoutLab && <>
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm">
-            <Link href="/dashboard" className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
+            <Link href={getPath("/dashboard")} className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
               <span className="material-symbols-outlined text-[18px]">dashboard</span>
               Dashboard
             </Link>

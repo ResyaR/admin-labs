@@ -1,5 +1,6 @@
 "use client";
 import { apiUrl } from "@/lib/paths";
+import { getPath } from "@/lib/navigation";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -92,7 +93,7 @@ export default function SessionHistoryPage() {
             <div className="max-w-6xl mx-auto space-y-6">
                 {/* Breadcrumb */}
                 <div className="flex items-center gap-2 text-sm">
-                    <Link href="/dashboard" className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
+                    <Link href={getPath("/dashboard")} className="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors">
                         <span className="material-symbols-outlined text-[18px]">dashboard</span>
                         Dashboard
                     </Link>
