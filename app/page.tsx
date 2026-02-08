@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiUrl, assetUrl } from "@/lib/paths";
+import { getPath } from "@/lib/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function LoginPage() {
 
       if (data.success) {
         localStorage.setItem("user", JSON.stringify(data.user));
-        router.push("/dashboard");
+        router.push(getPath("/dashboard"));
       }
     } catch (err) {
       console.error("Login error:", err);
