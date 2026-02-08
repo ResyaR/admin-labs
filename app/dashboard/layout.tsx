@@ -1,6 +1,7 @@
 
 "use client";
 import { apiUrl, assetUrl } from "@/lib/paths";
+import { getPath } from "@/lib/navigation";
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
@@ -58,7 +59,7 @@ export default function DashboardLayout({
         try {
             const response = await fetch(apiUrl('/api/auth/me'));
             if (!response.ok) {
-                router.push('/');
+                router.push(getPath('/'));
                 return;
             }
             const data = await response.json();
@@ -67,7 +68,7 @@ export default function DashboardLayout({
             }
         } catch (error) {
             console.error('Failed to fetch user:', error);
-            router.push('/');
+            router.push(getPath('/'));
         } finally {
             setLoading(false);
         }
@@ -86,13 +87,13 @@ export default function DashboardLayout({
             });
             document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
             if (response.ok) {
-                router.push('/');
+                router.push(getPath('/'));
                 router.refresh();
             } else {
-                router.push('/');
+                router.push(getPath('/'));
             }
         } catch (error) {
-            router.push('/');
+            router.push(getPath('/'));
         }
     };
 
@@ -133,21 +134,21 @@ export default function DashboardLayout({
                         <div className="px-4 mb-3 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
                             Menu Utama
                         </div>
-                        <Link href="/dashboard" className={linkClass('/dashboard')}>
+                        <Link href={getPath("/dashboard")} className={linkClass('/dashboard')}>
                             <span className={iconClass('/dashboard')}>dashboard</span>
                             <span className="text-sm font-medium tracking-tight">Ringkasan Analitik</span>
                         </Link>
-                        <Link href="/dashboard/pcs" className={linkClass('/dashboard/pcs')}>
+                        <Link href={getPath("/dashboard/pcs")} className={linkClass('/dashboard/pcs')}>
                             <span className={iconClass('/dashboard/pcs')}>computer</span>
                             <span className="text-sm font-medium tracking-tight">Daftar Komputer</span>
                         </Link>
                         {user?.role === 'guru' && (
                             <>
-                                <Link href="/dashboard/sessions" className={linkClass('/dashboard/sessions')}>
+                                <Link href={getPath("/dashboard/sessions")} className={linkClass('/dashboard/sessions')}>
                                     <span className={iconClass('/dashboard/sessions')}>history</span>
                                     <span className="text-sm font-medium tracking-tight">Riwayat Sesi</span>
                                 </Link>
-                                <Link href="/dashboard/issues" className={linkClass('/dashboard/issues')}>
+                                <Link href={getPath("/dashboard/issues")} className={linkClass('/dashboard/issues')}>
                                     <span className={iconClass('/dashboard/issues')}>report</span>
                                     <span className="text-sm font-medium tracking-tight">Laporan Masalah</span>
                                 </Link>
@@ -160,31 +161,31 @@ export default function DashboardLayout({
                         </div>
 
                         {user?.role === 'admin' && (
-                            <Link href="/dashboard/labs" className={linkClass('/dashboard/labs')}>
+                            <Link href={getPath("/dashboard/labs")} className={linkClass('/dashboard/labs')}>
                                 <span className={iconClass('/dashboard/labs')}>meeting_room</span>
                                 <span className="text-sm font-medium tracking-tight">Manajemen Lab</span>
                             </Link>
                         )}
 
                         {user?.role === 'admin' && (
-                            <Link href="/dashboard/users" className={linkClass('/dashboard/users')}>
+                            <Link href={getPath("/dashboard/users")} className={linkClass('/dashboard/users')}>
                                 <span className={iconClass('/dashboard/users')}>manage_accounts</span>
                                 <span className="text-sm font-medium tracking-tight">Akses Pengguna</span>
                             </Link>
                         )}
                         {user?.role === 'admin' && (
-                            <Link href="/dashboard/issues" className={linkClass('/dashboard/issues')}>
+                            <Link href={getPath("/dashboard/issues")} className={linkClass('/dashboard/issues')}>
                                 <span className={iconClass('/dashboard/issues')}>report</span>
                                 <span className="text-sm font-medium tracking-tight">Laporan Masalah</span>
                             </Link>
                         )}
                         {user?.role === 'admin' && (
-                            <Link href="/dashboard/sessions" className={linkClass('/dashboard/sessions')}>
+                            <Link href={getPath("/dashboard/sessions")} className={linkClass('/dashboard/sessions')}>
                                 <span className={iconClass('/dashboard/sessions')}>history</span>
                                 <span className="text-sm font-medium tracking-tight">Riwayat Sesi Guru</span>
                             </Link>
                         )}
-                        <Link href="/dashboard/credentials" className={linkClass('/dashboard/credentials')}>
+                        <Link href={getPath("/dashboard/credentials")} className={linkClass('/dashboard/credentials')}>
                             <span className={iconClass('/dashboard/credentials')}>key</span>
                             <span className="text-sm font-medium tracking-tight">Kunci Kredensial</span>
                         </Link>
